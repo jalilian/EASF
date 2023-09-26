@@ -7,8 +7,13 @@ setwd(temp_dir)
 # =========================================================
 library("ecmwfr")
 
+# European Centre for Medium-Range Weather Forecasts (ECMWF) 
 # Copernicus's Climate Data Store (CDS)
 # https://cds.climate.copernicus.eu
+
+# spatial resolution: 0.1x0.1 degrees
+# temporal resolution: monthly
+# temporal availability: from January 1981 to 2-3 months before the present
 
 # user credentials
 user <- "****************"
@@ -20,6 +25,7 @@ wf_set_key(user=user, key=cds.key, service="cds")
 # request for getting land data
 request <- list(
   # ERA5-Land monthly averaged data from 1950 to present
+  # data_id: reanalysis-era5-land-monthly-means:monthly_averaged_reanalysis
   product_type = "monthly_averaged_reanalysis",
   variable = c("leaf_area_index_high_vegetation", 
                "leaf_area_index_low_vegetation", 
