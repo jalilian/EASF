@@ -81,32 +81,61 @@ laih <- ncvar_get(cds_land_data, "lai_hv")
 # Leaf area index, low vegetation
 lail <- ncvar_get(cds_land_data, "lai_lv")
 
+# =========================================================
+library("tidyverse")
 
-plot_nc <- function(nc_data, var, i, implt=TRUE)
+# convert data to an R data.frame
+to_df_fun <- function(nc_data)
 {
-  vals <- ncvar_get(nc_data, var)[, , 1, ]
-  dd <- dim(vals)
-  if (implt)
+  # extract longitude
+  lon <- ncvar_get(nc_data, "longitude")
+  # extract latitude
+  lat <- ncvar_get(nc_data, "latitude")
+  # extract date and time
+  dt <- nc.get.time.series(cds_land_data)
+  # list of names of data variables
+  vars <- nc.get.variable.list(cds_land_data)
+  
+  dat <- vector("list", length=length(vars))
+  for (i in 1:length(vars))
   {
-    fields::image.plot(ncvar_get(nc_data, "longitude"), 
-                       rev(ncvar_get(nc_data, "latitude")),
-                       vals[, dd[2]:1, i], 
-                       main=paste(var, as.character(nc.get.time.series(nc_data))[i]),
-                       asp=1, xlab="longitude", ylab="latitude")
-    maps::map("world", add=TRUE, col="black")
-  } else{
-    image(ncvar_get(nc_data, "longitude"), 
-          rev(ncvar_get(nc_data, "latitude")),
-          vals[, dd[2]:1, i], 
-          main=paste(var, as.character(nc.get.time.series(nc_data))[i]),
-          asp=1, xlab="longitude", ylab="latitude", axes=FALSE)
-    contour(ncvar_get(nc_data, "longitude"), 
-            rev(ncvar_get(nc_data, "latitude")),
-            vals[, dd[2]:1, i], add=TRUE, 
-            col="grey50", lwd=0.5)
-    maps::map("world", add=TRUE, col="blue")
+    vals <- ncvar_get(nc_data, vars[i])[, , 1, ]
+    vals <- array(vals, dim=dim(vals),
+                  dimnames=list(longitude=1:length(lon), 
+                                latitude=1:length(lat),
+                                time=1:length(dt)))
+    
+    dat[[i]] <- as.data.frame.table(vals)
+    colnames(dat[[i]]) <- c(colnames(dat[[i]])[-4], vars[i])
+    dat[[i]] <- dat[[i]] %>%
+      mutate(longitude=lon[longitude],
+             latitude=lat[latitude],
+             time=dt[time])
+    
   }
+  
+  dat %>% reduce(full_join, 
+                 by = join_by(longitude, latitude, time))
 }
-plot_nc(cds_land_data, "skt", 2)
-plot_nc(cds_land_data, "tp", 2)
+
+dat <- to_df_fun(cds_land_data)
+
+plot_fun <- function(var, dt)
+{
+  dat %>% 
+    filter(as.character(time) == dt) %>%
+    ggplot(aes_string(x="longitude", 
+                      y="latitude", 
+                      fill=var)) +
+    geom_tile() +
+   # borders("world", 
+  #          xlim=range(dat %>% pull(longitude)), 
+  #          ylim=range(dat %>% pull(latitude))) +
+    coord_quickmap()
+}
+
+plot_fun("tp", "2022-12-01")
+
 # ===============================================
+# save land data as an R object of class data.frame
+saveRDS(dat, file="cds_land_data.rds")
