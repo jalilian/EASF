@@ -335,6 +335,7 @@ all_data <- all_data %>%
                                           "Fora" ~ "Outdoor"))
   
 
+# -----------------------------------------------
 # combine data with Morrumbala Prokopack data
 porko_data <- 
   read_excel(paste0(data_path, 
@@ -390,6 +391,57 @@ all_data <- all_data %>%
 # merging
 all_data <- bind_rows(all_data, porko_data)
   
+# -----------------------------------------------
+# combine data with Moamba Flit data
+
+flit_data <- 
+  read_excel(paste0(data_path, 
+                               "Maputo/Moamba_Flit.xlsx"), 
+                        sheet="Base dados_Flit (PSCs)_Moamba",
+                        range="A1:BE61", 
+                        col_names = TRUE,
+                        na=c("", "N/A")) %>%
+  # rename columns to have the same variable names for all data
+  rename(`House number`=`House no.`,
+         `Location number`=`Location No.`,
+         `Collection method`=`Collection Method`,
+         `Collection date (dd/mm/yyyy)`=`Date of collection`,
+         `Number of compartment/rooms in the house`=`Number of compartments in the room`,
+         `Number of people slept in the house last night`=`No. of people slept in the house last night`,
+         `Number of people slept in the room of mosquito collection`=`No. of people slepr in the room of mosquito collection`,
+         `Name of the animal present inside the house`=`Name of animal present inside the house`,
+         `Name of the animal present outside the house`=`Name of animal present outside the house`,
+         `Bednet present in the room of mosquito collecton`=`Bednet present in the room where trap is placed`,
+         `number of bednets present in the room where the trap is placed`=`No. f bednets present in the room bednet is placed`,
+         `Did you sleep under bednet last night`=`Slept under bednet last night`,
+         `Date of spray (dd/mm/yyyy)`=`Date of spraying`,
+         `Number of rooms sprayed`=`No of rooms sprayed`,                                                 
+         `Class of insecticide used`=`Class of insecticide`,                                               
+         `Name of compartment sprayed`=`Nme of the compartment sprayed`,
+         `Walls of the house modified`=`Modified walls`,                                             
+         `Which rooms are modified`=`Rooms modified`,                                                
+         `Methdo of modification`=`type of modification done`,                                                  
+         `Eave status`=`Status of eave space`,
+         `Nr. Total of  Culex`=`Nr. Total  Culex`,
+         `Nr. An. gambiae sl fed`=`Nr. An. gambiae fed`,
+         `Name of supervisor`=Supervisor) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Collection date (dd/mm/yyyy)` = 
+           as.Date(`Collection date (dd/mm/yyyy)`,
+                   format="%d/%m/%y")) %>%
+  # character to numeric conversion
+  mutate(`number of bednets present in the room where the trap is placed`=
+           as.numeric(`number of bednets present in the room where the trap is placed`),
+         `Number of rooms sprayed`=
+           as.numeric(`Number of rooms sprayed`))
+
+
+# merging
+all_data <- bind_rows(all_data, flit_data)
+
+# -----------------------------------------------
+# tweaking the data
+
 all_data <- all_data %>%
   mutate(`Temperature (oC) indoors`=ifelse(`Temperature (oC) indoors` > 35,
                                            NA, `Temperature (oC) indoors`),
@@ -481,3 +533,5 @@ all_data <- all_data %>%
            case_match(`Technician name`,
                       "Joao" ~ "João",
                       .default=`Technician name`))
+
+saveRDS(all_data, file="~/Desktop/Moz_Year1_data.rds")
