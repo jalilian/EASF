@@ -12,10 +12,60 @@ field_data <- readRDS(file=paste0(data_path, "field_data.rds"))
 # read already merged data
 merged_data <- readRDS(file=paste0(data_path, "merged_data.rds"))
 
-merged_data$Morrumbala %>% 
+# =========================================================
+# creating the data table for adaptive sampling framework
+
+adaptive_table <- list()
+
+# Morrumbala Prokopack
+adaptive_table[["Morrumbala-Prokopack"]] <- 
+  merged_data$Morrumbala %>% 
   count(Province, District, `House ID`,
     `Collection date (dd/mm/yyyy)`, 
-    `Species name`) %>% print(n=500)
+    `Species name`) %>%
+  pivot_wider(names_from=`Species name`, 
+              values_from=n) %>% 
+  replace(is.na(.), 0) %>% 
+  select(-`NA`)
+
+# Moamba Flit
+adaptive_table[["Moamba-Flit"]] <-
+  merged_data$Moamba %>%
+  select(Province, District, `House ID`,
+         `Collection date (dd/mm/yyyy)`,
+         `Nr. Total  An. gambiae sl`,
+         `Nr. Total An. funestus sl`) %>%
+  rename(`An. gambiae s.l`=`Nr. Total  An. gambiae sl`,
+         `An. funestus s.l`=`Nr. Total An. funestus sl`)
+
+# Gurue AL-CDC
+adaptive_table[["Gurue-AL-CDC"]] <-
+  field_data$Gurue %>% 
+  count(Province, District, `House ID`,
+        `Collection date (dd/mm/yyyy)`) %>%
+  rename(`Collection Hour`=n) %>%
+  left_join(lab_data$Gurue %>%
+              count(Province, District, `House ID`,
+                    `Collection date (dd/mm/yyyy)`,
+                    `Species name`))  %>%
+  pivot_wider(names_from=`Species name`, 
+              values_from=n) %>% 
+  replace(is.na(.), 0)
+
+# Morrumbala HLC
+adaptive_table[["Morrumbala-HLC"]] <-
+  field_data$Morrumbala %>% 
+  count(Province, District, `House ID`,
+        `Collection date (dd/mm/yyyy)`) %>%
+  rename(`Collection Hour`=n) %>%
+  left_join(lab_data$Morrumbala %>%
+              count(Province, District, `House ID`,
+                    `Collection date (dd/mm/yyyy)`,
+                    `Species name`))  %>%
+  pivot_wider(names_from=`Species name`, 
+              values_from=n) %>% 
+  replace(is.na(.), 0)
+
 
 merged_data$Morrumbala %>% 
   count(`Species name`)
