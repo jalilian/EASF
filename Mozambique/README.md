@@ -10,5 +10,9 @@ The EASF project has been operated across three provinces in Mozambique, which a
 
 ## Sampling program
 
-|Province|Districts|Number of sampling locations|Collection months|
+|Province|District(s)|Number of sampling locations|Collection months|
 | ---- | ---------- | ----- | ---- | 
+|Maputo  | Moamba | | |
+|Niassa| | | |
+|Zambezia| Gurue | | |
+|Zambezia| Morrumbala | | |
