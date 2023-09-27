@@ -14,7 +14,8 @@ merged_data <- readRDS(file=paste0(data_path, "merged_data.rds"))
 
 merged_data$Morrumbala %>% 
   count(Province, District, `House ID`,
-    `Collection date (dd/mm/yyyy)`) %>% print(n=500)
+    `Collection date (dd/mm/yyyy)`, 
+    `Species name`) %>% print(n=500)
 
 merged_data$Morrumbala %>% 
   count(`Species name`)

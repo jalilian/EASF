@@ -368,7 +368,12 @@ merged_data[["Morrumbala"]] <-
          `Order number`=`Orden No`,
          `Species name`=`Species collected`,
          `Mosquito microscopy code`=`Mosquito code`,
-         `Name of tehnician`=`Supervisor name`)  
+         `Name of tehnician`=`Supervisor name`) %>%
+  # change 0 for no msquitoes to NA
+  mutate(`Species name`=
+           case_match(`Species name`,
+                      "0" ~ NA,
+                      .default=`Species name`))
 
 # Moamba Flit data
 
