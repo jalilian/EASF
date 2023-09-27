@@ -76,7 +76,7 @@ adaptive_table[["Gurue-AL-CDC"]] <-
   field_data$Gurue %>% 
   count(Province, District, `House ID`,
         `Collection date (dd/mm/yyyy)`) %>%
-  rename(`Collection Hour`=n) %>%
+  rename(`Collection hour`=n) %>%
   left_join(lab_data$Gurue %>%
               count(Province, District, `House ID`,
                     `Collection date (dd/mm/yyyy)`,
@@ -91,7 +91,7 @@ adaptive_table[["Morrumbala-HLC"]] <-
   field_data$Morrumbala %>% 
   count(Province, District, `House ID`,
         `Collection date (dd/mm/yyyy)`) %>%
-  rename(`Collection Hour`=n) %>%
+  rename(`Collection hour`=n) %>%
   left_join(lab_data$Morrumbala %>%
               count(Province, District, `House ID`,
                     `Collection date (dd/mm/yyyy)`,
@@ -106,7 +106,7 @@ adaptive_table[["Moamba-AL-CDC"]] <-
   field_data$Moamba %>% 
   count(Province, District, `House ID`,
         `Collection date (dd/mm/yyyy)`) %>%
-  rename(`Collection Hour`=n) %>%
+  rename(`Collection hour`=n) %>%
   left_join(lab_data$Moamba %>%
               count(Province, District, `House ID`,
                     `Collection date (dd/mm/yyyy)`,
@@ -141,16 +141,21 @@ adaptive_table <-
   relocate(Longitude, Latitude, .after=`House ID`)
 
 # monthly
-adaptive_table <- adaptive_table %>%
+adaptive_table <- 
+  adaptive_table %>%
   mutate(Year=substr(`Collection date (dd/mm/yyyy)`, 1, 4),
          Month=substr(`Collection date (dd/mm/yyyy)`, 6, 7),
          Month=month.name[as.integer(Month)]) %>%
   relocate(Year, Month, .before=`Collection date (dd/mm/yyyy)`) %>%
   select(-`Collection date (dd/mm/yyyy)`) %>%
   group_by(Province, District, 
-           `House ID`, Longitude, Latitude,
+           `House ID`, `Collection method`,
+           Longitude, Latitude,
            Year, Month) %>%
-  summarise(across(starts_with("An. "), ~sum(.x ,na.rm=TRUE)))
+  summarise(across(c(`Collection hour`, 
+                     `Collection time`,
+                     starts_with("An. ")), 
+                   ~sum(.x ,na.rm=TRUE)))
 
 # save adaptive table
 saveRDS(adaptive_table, 
