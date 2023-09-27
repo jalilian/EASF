@@ -96,6 +96,35 @@ colnames(adaptive_table[["Moamba-AL-CDC"]])
 adaptive_table <- 
   adaptive_table %>% reduce(full_join)
 
+# =========================================================
+# reading coordinates of the collection houses
+house_coords <- 
+  read_csv(paste0(data_path, "Moz_coordinates_updated.csv"))
+
+# include coordinates in the adaptive table
+adaptive_table <- 
+  adaptive_table %>% 
+  left_join(house_coords) %>%
+  relocate(Longitude, Latitude, .after=`House ID`)
+
+# monthly
+adaptive_table <- adaptive_table %>%
+  mutate(Year=substr(`Collection date (dd/mm/yyyy)`, 1, 4),
+         Month=substr(`Collection date (dd/mm/yyyy)`, 6, 7),
+         Month=month.name[as.integer(Month)]) %>%
+  relocate(Year, Month, .before=`Collection date (dd/mm/yyyy)`) %>%
+  select(-`Collection date (dd/mm/yyyy)`) %>%
+  group_by(Province, District, 
+           `House ID`, Longitude, Latitude,
+           Year, Month) %>%
+  summarise(across(starts_with("An. "), ~sum(.x ,na.rm=TRUE)))
+
+# save adaptive table
+saveRDS(adaptive_table, 
+        file=paste0(data_path, "adaptive_table.rds"))
+
+
+
 
 
 
