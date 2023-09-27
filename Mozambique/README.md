@@ -1,7 +1,6 @@
 # Mozambique
 The EASF project has been operated across three provinces in Mozambique, which are as follows:
 
-
 |Province|Area (sq. km)|Number of districts|Population|
 | ------ | ------- | ----- | ---- | 
 |Maputo  | 26,011  |  7 | 2,507,098 |
@@ -9,6 +8,7 @@ The EASF project has been operated across three provinces in Mozambique, which a
 |Zambezia| 105,008 | 16 | 5,110,787 |
 
 ## Sampling program
+The sampling plan so far has been executed according to the following table:
 
 |Province|District|Collection Method|Number of sampling locations|Collection months|
 | ---- | ---------- | ----- |  ----- | ---- | 
