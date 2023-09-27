@@ -414,4 +414,4 @@ merged_data[["Moamba"]] <-
            as.numeric(`Number of rooms sprayed`))
 
 # save all merged data
-saveRDS(merged_data, file=paste0(data_path, "field_data.rds"))
+saveRDS(merged_data, file=paste0(data_path, "merged_data.rds"))
