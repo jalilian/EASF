@@ -20,19 +20,20 @@ adaptive_table <- list()
 # Morrumbala Prokopack
 adaptive_table[["Morrumbala-Prokopack"]] <- 
   merged_data$Morrumbala %>% 
+  # compute collection time
   mutate(`Collection time`=
            difftime(as.POSIXlt(paste(`Collection date (dd/mm/yyyy)`, 
                                      `Collection stop time`)), 
                     as.POSIXlt(paste(`Collection date (dd/mm/yyyy)`, 
                                      `Collection start time`)), 
                     units="mins")) %>%
+  # make sure times are positive
   mutate(`Collection time`=
            abs(`Collection time`)) %>%
   group_by(Province, District, `House ID`,
         `Collection date (dd/mm/yyyy)`) %>%
   summarise(`Collection time`=
               sum(`Collection time`)) %>%
-  #as_tibble() %>%
   left_join(merged_data$Morrumbala %>% 
               filter(!is.na(`Species name`)) %>%
               count(Province, District, `House ID`,
@@ -52,39 +53,19 @@ adaptive_table[["Morrumbala-Prokopack"]] <-
 # Moamba Flit
 adaptive_table[["Moamba-Flit"]] <-
   merged_data$Moamba %>%
+  # compute collection time
   mutate(`Collection time`=
            difftime(as.POSIXlt(paste(`Collection date (dd/mm/yyyy)`, 
                                      `Collection stop time`)), 
                     as.POSIXlt(paste(`Collection date (dd/mm/yyyy)`, 
                                      `Collection start time`)), 
                     units="mins")) %>%
-  select(`Collection time`)
+  # make sure times are positive
+  mutate(`Collection time`=
+           abs(`Collection time`)) %>%
   select(Province, District, `House ID`,
          `Collection date (dd/mm/yyyy)`,
-         `Nr. Total  An. gambiae sl`,
-         `Nr. Total An. funestus sl`) %>%
-  rename(`An. gambiae s.l`=`Nr. Total  An. gambiae sl`,
-         `An. funestus s.l`=`Nr. Total An. funestus sl`)
-
-
-
-
-
-adaptive_table[["Morrumbala-Prokopack"]] <- 
-  merged_data$Morrumbala %>% 
-  count(Province, District, `House ID`,
-    `Collection date (dd/mm/yyyy)`, 
-    `Species name`) %>%
-  pivot_wider(names_from=`Species name`, 
-              values_from=n) %>% 
-  replace(is.na(.), 0) %>% 
-  select(-`NA`)
-
-# Moamba Flit
-adaptive_table[["Moamba-Flit"]] <-
-  merged_data$Moamba %>%
-  select(Province, District, `House ID`,
-         `Collection date (dd/mm/yyyy)`,
+         `Collection time`,
          `Nr. Total  An. gambiae sl`,
          `Nr. Total An. funestus sl`) %>%
   rename(`An. gambiae s.l`=`Nr. Total  An. gambiae sl`,
