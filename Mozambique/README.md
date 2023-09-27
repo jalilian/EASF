@@ -10,7 +10,7 @@ The EASF project has been operated across three provinces in Mozambique, which a
 ## Sampling program
 The sampling plan so far has been executed according to the following table:
 
-|Province|District|Collection Method|Number of sampling locations|Collection months (number of collections)|
+|Province|District|Collection Method|Number of sampling locations | Sampling months (number of collections)|
 | ---- | ---------- | ----- |  ----- | ---- | 
 |Maputo  | Moamba | AL-CDC | 18 | 2022: Sep (3), Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3) |
 |Maputo  | Moamba | Flit | 12 | 2022: Sep (3), Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3) |
