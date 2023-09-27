@@ -23,14 +23,13 @@ cds.key <- "********************************"
 # set secret ECMWF token
 wf_set_key(user=user, key=cds.key, service="cds")
 
+# set the years and months
 ym <- rbind(
-  cbind("2022", c("05", "06", "07", "08", 
-                  "09", "10", "11", "12")),
-  cbind("2023", c("01", "02", "03", "04", 
-                  "05", "06", "07", "08", "09"))
+  cbind("2022", sprintf("%02d", 5:12)),
+  cbind("2023", sprintf("%02d", 1:9))
 )
 
-
+# download land data for all combinations of years and months
 for (i in split(ym, row(ym)))
 {
   # request for getting land data
@@ -62,14 +61,11 @@ for (i in split(ym, row(ym)))
              verbose=TRUE)
 }
 
-
-
 # =========================================================
 
 library("ncdf4")
 library("ncdf4.helpers")
 library("tidyverse")
-
 
 # convert nc data to an R data.frame
 to_df_fun <- function(nc_data)
@@ -117,11 +113,12 @@ to_df_fun <- function(nc_data)
                               year, month))
 }
 
+# extract and process downloaded land data
 land_data <- list()
 for (i in split(ym, row(ym)))
 {
-  # extract downloaded Zip file
   dn <- paste0("landvars_hourly_", i[1], "_", i[2])
+  # extract downloaded Zip file
   unzip(zipfile=paste0(dn, ".zip"), 
         exdir=paste0(dn ,"/"))
   
@@ -130,15 +127,18 @@ for (i in split(ym, row(ym)))
   
   # dimension axes
   nc.get.dim.axes(cds_land_data)
-  land_data[[paste(i, collapse="_")]] <- to_df_fun(cds_land_data)
+  
+  land_data[[paste(i, collapse="_")]] <- 
+    to_df_fun(cds_land_data)
 }
 
-# merge 
+# merge all the years and months 
 land_data <- 
   land_data %>% 
   bind_rows() %>% 
   as_tibble()
 
+# check the years and months
 land_data  %>%
   count(year, month)
 
