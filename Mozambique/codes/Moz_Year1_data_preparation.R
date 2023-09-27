@@ -411,7 +411,11 @@ merged_data[["Moamba"]] <-
   # prepare date and time (hour) of collection
   mutate(`Collection date (dd/mm/yyyy)` = 
            as.Date(`Collection date (dd/mm/yyyy)`,
-                   format="%d/%m/%y")) %>%
+                   format="%d/%m/%y"),
+         `Collection start time`=
+           substr(`Collection start time`, 12, 16),
+         `Collection stop time`=
+           substr(`Collection stop time`, 12, 16)) %>%
   # character to numeric conversion
   mutate(`number of bednets present in the room where the trap is placed`=
            as.numeric(`number of bednets present in the room where the trap is placed`),
