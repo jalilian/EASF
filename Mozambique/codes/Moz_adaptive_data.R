@@ -8,7 +8,7 @@ data_path <- "~/Downloads/Mozambique/"
 # read lab data
 lab_data <- readRDS(file=paste0(data_path, "lab_data.rds"))
 # read field data
-filed_data <- readRDS(file=paste0(data_path, "field_data.rds"))
+field_data <- readRDS(file=paste0(data_path, "field_data.rds"))
 # read already merged data
 merged_data <- readRDS(file=paste0(data_path, "merged_data.rds"))
 
@@ -19,6 +19,7 @@ merged_data$Morrumbala %>%
 merged_data$Morrumbala %>% 
   count(`Species name`)
 
+filed_data[["Gurue"]] %>% count(`Collection method`)
 # path to the data directory
 data_path <- "~/Downloads/Mozambique/"
 
