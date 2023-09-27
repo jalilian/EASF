@@ -81,7 +81,9 @@ lab_data[["Gurue"]] <-
   # translate Isca humana to HLC
   mutate(`Collection method`=
            case_match(`Collection method`,
-                      "Isca humana" ~ "HLC"))
+                      "Isca humana" ~ "HLC")) %>%
+  # remove 3 rows with missing variables
+  filter(!is.na(`Collection date (dd/mm/yyyy)`))
 
 # Morrumbala lab data
 lab_data[["Morrumbala"]] <- 
@@ -137,12 +139,9 @@ lab_data[["Moamba"]] <-
 all.equal(colnames(lab_data[["Gurue"]]),
           colnames(lab_data[["Morrumbala"]]),
           colnames(lab_data[["Moamba"]]))
-  
-# merge all lab data
-lab_data <- 
-  bind_rows(lab_data[["Gurue"]], 
-            lab_data[["Morrumbala"]],
-            lab_data[["Moamba"]])
+
+# save all lab data
+saveRDS(lab_data, file=paste0(data_path, "lab_data.rds"))
 
 # ---------------------------------------------
 # filed data files: contains field records on 
@@ -202,7 +201,11 @@ field_data[["Gurue"]] <-
            as.numeric(Latitude)) %>%
   # fix collection method
   select(-`Collection method...37`) %>%
-  rename(`Collection method`=`Collection method...9`)
+  rename(`Collection method`=`Collection method...9`) %>%
+  # translate Isca humana to HLC
+  mutate(`Collection method`=
+           case_match(`Collection method`,
+                      "Isca humana" ~ "HLC"))
   
 # Morrumbala field data
 field_data[["Morrumbala"]] <- 
@@ -308,36 +311,21 @@ setdiff(colnames(field_data[["Moamba"]]),
 setdiff(colnames(field_data[["Gurue"]]),
         colnames(field_data[["Moamba"]]))
 
-# merge all field data
-field_data <- 
-  bind_rows(field_data[["Gurue"]],
-            field_data[["Morrumbala"]]  %>%
-              select(-c("CDC-LT worked all night", 
-                        "Status of the lamp")),
-            field_data[["Moamba"]] %>%
-              select(-c("CDC-LT worked all night", 
-                        "Status of the lamp", 
-                        "Observations",
-                        "Name of supervisor")))
-  
+# save all field data
+saveRDS(field_data, file=paste0(data_path, "field_data.rds"))
 
-# -----------------------------------------------
-# merge lab and feild data
-all_data <- 
-  full_join(field_data, lab_data, 
-            na_matches="never",
-            relationship="many-to-many")
-  
-all_data <- all_data %>%
-  mutate(`Place of collection`=case_match(`Place of collection`,
-                                          "Dentro"~"Indoor",
-                                          "For a" ~ "Outdoor",
-                                          "Fora" ~ "Outdoor"))
-  
+# ---------------------------------------------
+# already merged data files: contains field records on 
+#     collection date, time an locations, 
+#     characteristics of houses, and human behavior
+#     and collected mosquitoes information
+# each row: record of a collection attempt or a collected mosquito
+# ---------------------------------------------
 
-# -----------------------------------------------
-# combine data with Morrumbala Prokopack data
-porko_data <- 
+merged_data <- list()
+
+# Morrumbala Prokopack data
+merged_data[["Morrumbala"]] <- 
   read_excel(paste0(data_path, 
                     "Zambezia/Morrumbala_Prokopack.xlsx"), 
              sheet="B.dados_procopac_Morrumbala",
@@ -382,19 +370,9 @@ porko_data <-
          `Mosquito microscopy code`=`Mosquito code`,
          `Name of tehnician`=`Supervisor name`)  
 
-# character to numeric conversion
-all_data <- all_data %>%
-  mutate(`Number of rooms sprayed`=as.numeric(`Number of rooms sprayed`)) %>%
-  rename(`Number of people slept in the room of mosquito collection`=`Number of people slept in the room with the trap`,
-         `Bednet present in the room of mosquito collecton`=`Bednet exist in the room where the trap is placed`)
+# Moamba Flit data
 
-# merging
-all_data <- bind_rows(all_data, porko_data)
-  
-# -----------------------------------------------
-# combine data with Moamba Flit data
-
-flit_data <- 
+merged_data[["Moamba"]] <- 
   read_excel(paste0(data_path, 
                                "Maputo/Moamba_Flit.xlsx"), 
                         sheet="Base dados_Flit (PSCs)_Moamba",
@@ -435,103 +413,5 @@ flit_data <-
          `Number of rooms sprayed`=
            as.numeric(`Number of rooms sprayed`))
 
-
-# merging
-all_data <- bind_rows(all_data, flit_data)
-
-# -----------------------------------------------
-# tweaking the data
-
-all_data <- all_data %>%
-  mutate(`Temperature (oC) indoors`=ifelse(`Temperature (oC) indoors` > 35,
-                                           NA, `Temperature (oC) indoors`),
-         `Temperature (oC) outdoors`=ifelse(`Temperature (oC) outdoors` > 39,
-                                            NA, `Temperature (oC) outdoors`),
-         `% Relative Humidity  (RH) indoors`=ifelse(`% Relative Humidity  (RH) indoors` > 100,
-                                                    `% Relative Humidity  (RH) indoors` / 10,
-                                                    `% Relative Humidity  (RH) indoors`),
-         `% Realtive Humidity  (RH) outdoors`=ifelse(`% Realtive Humidity  (RH) outdoors` > 100,
-                                                     `% Realtive Humidity  (RH) outdoors` / 10,
-                                                     `% Realtive Humidity  (RH) outdoors`))
-
-all_data <- all_data %>%
-  mutate(across(c(`Bednet present inside the house`,
-                  `Bednet present in the room of mosquito collecton`,
-                  `Did you sleep under bednet last night`,
-                  `House sprayed`,
-                  `Animals present inside the house`,
-                  `Animal present outside the house`,
-                  `Walls of the house modified`,
-                  `Rain or No`),
-                ~case_when(. == "Não" ~ "No",
-                           . == "não" ~ "No",
-                           . == "Nao" ~ "No",
-                           . == "Sim" ~ "Yes",
-                           . == "sim" ~ "Yes"))) %>%
-  mutate(`Type of roof`=case_match(`Type of roof`, 
-                                   "palha/capim" ~ "Palha/Capim",
-                                   .default=`Type of roof`),
-         `Name of the animal present inside the house`=
-           case_match(`Name of the animal present inside the house`,
-                      "cabrito" ~ "Cabrito",
-                      "cobaias" ~ "Cobaias",
-                      "galinhas" ~ "Galinhas",
-                      "gato" ~ "Gato",
-                      "gatos" ~ "Gato",
-                      "galinhas/gato" ~ "Galinhas/gato",
-                      "Cabrito/gato" ~ "Cabrito/Gato",
-                      "Pato/Cobaias" ~ "Patos/Cobaias",
-                      "Pato/galinhas" ~ "Patos/galinhas",
-                      .default=`Name of the animal present inside the house`),
-         `Name of the animal present outside the house`=
-           case_match(`Name of the animal present outside the house`,
-                      "gato" ~ "Gato",
-                      "Cabrito/gato" ~ "Cabrito/Gato",
-                      "Cão" ~ "Cao",
-                      "Cabrito" ~ "Cabritos",
-                      "Cabrito/gato, galinhas" ~ "Cabritos/Galinhas/Gato",
-                      "pombos" ~ "Pombo",
-                      "Pombos" ~ "Pombo",
-                      "Patos/galinhas" ~ "Patos/Galinhas",
-                      "Pato/galinha" ~ "Patos/Galinhas",
-                      "3" ~ NA,
-                      .default=`Name of the animal present outside the house`),
-         `Type of bednet`=
-           case_match(`Type of bednet`,
-                      "Duranet" ~ "DuraNet",
-                      "Duranet Plus" ~ "DuraNet Plus",
-                      "Magnet" ~ "MagNet",
-                      "Olyset-Net" ~ "Olyset Net",
-                      "Olyset-net" ~ "Olyset Net",
-                      "olyset-Net" ~ "Olyset Net",
-                      "Olyset-plus" ~ "Olyset Plus",
-                      "Duranet & Oliset Net" ~ "Duranet & Olyset Net",
-                      "Duranet & Olyset" ~ "Duranet & Olyset Net",
-                      "royal Sentry" ~ "Royal Sentry",
-                      "royal guard" ~ "Royal guard",
-                      .default=`Type of bednet`),
-         `Name of compartment sprayed`=
-           case_match(`Name of compartment sprayed`,
-                      "Quartos" ~ "Quarto",
-                      "Sala de estar e quarto" ~ "Sala de estar e Quarto",
-                      "Sala de estar quarto e cozinha" ~ "Sala de estar ,Quarto e cozinha",
-                      .default=`Name of compartment sprayed`),
-         `Sex of volunteer inside the house`=
-           case_match(`Sex of volunteer inside the house`,
-                      "masculino" ~ "Masculino",
-                      .default=`Sex of volunteer inside the house`),
-         `Place of collection`=
-           case_match(`Place of collection`,
-                      "Dentro" ~ "Indoor",
-                      .default=`Place of collection`),
-         `Species name`=
-           case_match(`Species name`,
-                      "An. Desconhecido" ~ "An. desconhecido",
-                      "0" ~ NA,
-                      .default=`Species name`),
-         `Technician name`=
-           case_match(`Technician name`,
-                      "Joao" ~ "João",
-                      .default=`Technician name`))
-
-saveRDS(all_data, file="~/Desktop/Moz_Year1_data.rds")
+# save all merged data
+saveRDS(merged_data, file=paste0(data_path, "field_data.rds"))
