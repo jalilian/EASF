@@ -50,7 +50,8 @@ adaptive_table[["Gurue-AL-CDC"]] <-
                     `Species name`))  %>%
   pivot_wider(names_from=`Species name`, 
               values_from=n) %>% 
-  replace(is.na(.), 0)
+  replace(is.na(.), 0) %>%
+  select(-`NA`)
 
 # Morrumbala HLC
 adaptive_table[["Morrumbala-HLC"]] <-
@@ -80,10 +81,24 @@ adaptive_table[["Moamba-AL-CDC"]] <-
   pivot_wider(names_from=`Species name`, 
               values_from=n) %>% 
   replace(is.na(.), 0) %>%
-  select(-`NA`)
+  select(-`NA`) %>%
+  rename(`An. gambiae s.l`=`An. gabiae s.l`,
+         `An. coustani`=`An. coustan`)
 
-merged_data$Morrumbala %>% 
-  count(`Species name`)
+# check column names
+colnames(adaptive_table[["Morrumbala-Prokopack"]])
+colnames(adaptive_table[["Moamba-Flit"]])
+colnames(adaptive_table[["Gurue-AL-CDC"]])
+colnames(adaptive_table[["Morrumbala-HLC"]])
+colnames(adaptive_table[["Moamba-AL-CDC"]])
+
+# marge
+adaptive_table <- 
+  adaptive_table %>% reduce(full_join)
+
+
+
+
 
 filed_data[["Gurue"]] %>% count(`Collection method`)
 # path to the data directory
