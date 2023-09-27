@@ -14,5 +14,5 @@ The EASF project has been operated across three provinces in Mozambique, which a
 | ---- | ---------- | ----- |  ----- | ---- | 
 |Maputo  | Moamba | | | |
 |Niassa| | | | |
-|Zambezia| Gurue | HLC | | |
+|Zambezia| Gurue | HLC | 12 | 2022: 9, 10, 11 and 2023: 1, 2, 3, 4, 5, 6, 7, 8|
 |Zambezia| Morrumbala | | | |
