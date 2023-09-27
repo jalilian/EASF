@@ -64,8 +64,23 @@ adaptive_table[["Morrumbala-HLC"]] <-
                     `Species name`))  %>%
   pivot_wider(names_from=`Species name`, 
               values_from=n) %>% 
-  replace(is.na(.), 0)
+  replace(is.na(.), 0) %>%
+  select(-`NA`)
 
+# Moamba AL-CDC
+adaptive_table[["Moamba-AL-CDC"]] <-
+  field_data$Moamba %>% 
+  count(Province, District, `House ID`,
+        `Collection date (dd/mm/yyyy)`) %>%
+  rename(`Collection Hour`=n) %>%
+  left_join(lab_data$Moamba %>%
+              count(Province, District, `House ID`,
+                    `Collection date (dd/mm/yyyy)`,
+                    `Species name`))  %>%
+  pivot_wider(names_from=`Species name`, 
+              values_from=n) %>% 
+  replace(is.na(.), 0) %>%
+  select(-`NA`)
 
 merged_data$Morrumbala %>% 
   count(`Species name`)

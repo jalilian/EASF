@@ -123,7 +123,7 @@ lab_data[["Moamba"]] <-
   # prepare date and time (hour) of collection
   mutate(`Date of collection` = 
            as.Date(`Date of collection`,
-                   format="%d/%m/%y")) %>%
+                   format="%d/%m/%Y")) %>%
   # rename columns to have the same variable names for all data
   rename(`Collection date (dd/mm/yyyy)`=`Date of collection`,
          `House number`=`House No.`,
