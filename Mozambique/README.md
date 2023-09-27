@@ -12,7 +12,7 @@ The EASF project has been operated across three provinces in Mozambique, which a
 
 |Province|District|Collection Method|Number of sampling locations|Collection months|
 | ---- | ---------- | ----- |  ----- | ---- | 
-|Maputo  | Moamba | AL-CDC | 18 | 2022: Sep, Oct, Nov <br> 2023: Jan, Feb |
+|Maputo  | Moamba | AL-CDC | 18 | 2022: Sep (3), Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3) |
 |Maputo  | Moamba | Flit | 12 | 2022: Sep, Oct, Nov <br> 2023: Jan, Feb |
 |Niassa| | | | |
 |Zambezia| Gurue | HLC | 12 | 2022: Sep, Oct, Nov <br> 2023: Jan, Feb, Mar, Apr, May, Jun, Jul, Aug |
