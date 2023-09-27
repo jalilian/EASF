@@ -75,14 +75,18 @@ to_df_fun <- function(nc_data)
   # extract latitude
   lat <- ncvar_get(nc_data, "latitude")
   # extract date and time
-  dt <- nc.get.time.series(cds_land_data)
+  dt <- nc.get.time.series(nc_data)
   # list of names of data variables
-  vars <- nc.get.variable.list(cds_land_data)
+  vars <- nc.get.variable.list(nc_data)
   
   dat <- vector("list", length=length(vars))
   for (i in 1:length(vars))
   {
     vals <- ncvar_get(nc_data, vars[i])
+    if (length(dim(vals)) > 3)
+    {
+      vals <- vals[, , 2, ]
+    }
     dimnames(vals) <- 
       list(longitude=1:length(lon), 
            latitude=1:length(lat),
