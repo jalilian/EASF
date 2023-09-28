@@ -48,7 +48,21 @@ plot(africa_land_cover, type="classes")
 # function to extract land cover type by coordinates
 get_land_cover <- function(x, y)
 {
-  extract(africa_land_cover, cbind(x, y))
+  terra::extract(africa_land_cover, cbind(x, y))
 }
 
 # =========================================================
+
+# read adaptive_table_covars data
+data_path <- "~/Downloads/Mozambique/"
+adaptive_table_covars <- 
+  readRDS(paste0(data_path, "adaptive_table_coavrs.rds"))
+
+library("tidyverse")
+adaptive_table_covars <- 
+  adaptive_table_covars %>%
+  as_tibble() %>%
+  mutate(land_cover=
+           get_land_cover(Longitude, Latitude))
+         
+get_land_cover(adaptive_table_covars$Longitude, adaptive_table_covars$Latitude)
