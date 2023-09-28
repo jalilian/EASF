@@ -168,6 +168,12 @@ saveRDS(adaptive_table,
 
 
 
+
+
+
+
+
+
 filed_data[["Gurue"]] %>% count(`Collection method`)
 # path to the data directory
 data_path <- "~/Downloads/Mozambique/"
