@@ -26,3 +26,5 @@ The extracted data for Mozambique can be directly imported to ```R``` with the f
 ```R
 land_data <- readRDS(url("https://github.com/jalilian/EASF/raw/main/Mozambique/cds_land_data.rds"))
 ```
+
+The [S2 Prototype Land Cover 20m Map of Africa 2016](https://2016africalandcover20m.esrin.esa.int/) data are used for extracting land cover type of the sampling locations. This data is provided to the public by the ESA Climate Change Initiative and its Land Cover project as the source of the CCI-LC database.

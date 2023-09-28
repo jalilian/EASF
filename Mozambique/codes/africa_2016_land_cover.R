@@ -65,4 +65,5 @@ adaptive_table_covars <-
   mutate(land_cover=
            get_land_cover(Longitude, Latitude))
          
-get_land_cover(adaptive_table_covars$Longitude, adaptive_table_covars$Latitude)
+adaptive_table_covars %>%
+  count(land_cover)
