@@ -22,8 +22,29 @@ downloaded_file <-
 # extract the downloaded file
 unzip(zipfile=downloaded_file, exdir=temp_dir)
 
+# read the africa 2016 land cover
 library("raster")
 africa_land <- 
   raster(paste0(temp_dir, 
                 "ESACCI-LC-L4-LC10-Map-20m-P1Y-2016-v1.0.tif"))
 
+# get Mozambique shapefile
+download.file(
+  "https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_MOZ_shp.zip",
+  destfile="Moz.zip")
+
+# extract Mozambique shapefile
+unzip(zipfile="Moz.zip", exdir=temp_dir)
+
+# read the shapefile of Mozambique boundary
+library("sf")
+moz_map <- read_sf(temp_dir, 
+                   layer="gadm41_MOZ_0")
+
+# crop the raster map of Africa 2016 lancover to Mozambique map
+
+moz_land <- crop(africa_land, extent(moz_map))
+
+library("tidyverse")
+africa_land %>%
+  ggplot() + geom_raster()
