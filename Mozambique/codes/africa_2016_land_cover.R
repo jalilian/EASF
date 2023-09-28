@@ -11,7 +11,7 @@
 # =========================================================
 
 # Create a temporary directory to download map data
-temp_dir <- "/tmp/africa2016landcover"
+temp_dir <- "/tmp/africa2016landcover/"
 dir.create(temp_dir)
 setwd(temp_dir)
 
@@ -20,4 +20,10 @@ downloaded_file <-
   "~/Downloads/ESACCI-LC-L4-LC10-Map-20m-P1Y-2016-v1.0.zip"
 
 # extract the downloaded file
-unzip(zipfile=downloaded_file, exdir=tmp_dir)
+unzip(zipfile=downloaded_file, exdir=temp_dir)
+
+library("raster")
+africa_land <- 
+  raster(paste0(temp_dir, 
+                "ESACCI-LC-L4-LC10-Map-20m-P1Y-2016-v1.0.tif"))
+
