@@ -32,7 +32,7 @@ The [S2 Prototype Land Cover 20m Map of Africa 2016](https://2016africalandcover
 The land cover type of sampling locations is as follows:
 |Province|District| Collection Method|Land cover type of sampling locations |
 | ---- | ---------- | ----- | ----- |
-Maputo  | Moamba | AL-CDC | |
+Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 1 <br> Vegetation aquatic or regularly flooded 2 <br> Built-up areas 10 |
 |Maputo  | Moamba | Flit | |
 |Niassa| | | |
 |Zambezia| Gurue | HLC | |
