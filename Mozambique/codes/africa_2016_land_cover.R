@@ -138,10 +138,14 @@ get_elevation <- function(x, y)
   terra::extract(Moz_strm30, cbind(x, y))
 }
 # =========================================================
-# read adaptive_table_covars data
+# read adaptive table with covariates
 data_path <- "~/Downloads/Mozambique/"
 adaptive_table_covars <- 
   readRDS(paste0(data_path, "adaptive_table_coavrs.rds"))
+
+# read adaptive grid with covariates
+adaptive_grid_covars <- 
+  readRDS(paste0(data_path, "adaptive_grid_coavrs.rds"))
 
 library("tidyverse")
 # add land cover and elevation to the covariates
@@ -153,10 +157,24 @@ adaptive_table_covars <-
          elevation=
            get_elevation(Longitude, Latitude))
 
+adaptive_grid_covars <- 
+  adaptive_grid_covars %>%
+  as_tibble() %>%
+  mutate(land_cover=
+           get_land_cover(Longitude, Latitude),
+         elevation=
+           get_elevation(Longitude, Latitude))
+
+
 # check land cover
 adaptive_table_covars %>%
   distinct(`House ID`, .keep_all=TRUE) %>%
   group_by(Province, District, `Collection method`) %>%
+  count(land_cover)
+
+adaptive_grid_covars %>%
+  distinct(Longitude, Latitude, .keep_all=TRUE) %>%
+  group_by(Province, District) %>%
   count(land_cover)
 
 # check elevation
@@ -165,6 +183,18 @@ adaptive_table_covars %>%
   group_by(Province, District, `Collection method`) %>%
   select(elevation)
 
+adaptive_grid_covars %>%
+  distinct(Longitude, Latitude, .keep_all=TRUE) %>%
+  group_by(Province, District) %>%
+  select(elevation)
+
+adaptive_grid_covars <-
+  adaptive_grid_covars %>%
+  filter(!is.na(elevation))
+
 # save the updated data
 saveRDS(adaptive_table_covars, 
         file=paste0(data_path, "adaptive_table_coavrs.rds"))
+
+saveRDS(adaptive_grid_covars, 
+        file=paste0(data_path, "adaptive_grid_coavrs.rds"))

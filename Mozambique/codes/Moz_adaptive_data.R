@@ -163,6 +163,101 @@ saveRDS(adaptive_table,
 
 
 # =========================================================
+# download shapefile of Mozambique boundary
+temp_dir <- "/tmp/Moz/"
+dir.create(temp_dir)
+download.file(
+  url="https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_MOZ_shp.zip",
+  destfile=paste0(temp_dir, "Moz_map.zip"))
+
+# extract the shapefile
+unzip(zipfile=paste0(temp_dir, "Moz_map.zip"), 
+      exdir=temp_dir)
+# read the shapefile
+library("terra")
+Moz_map <- vect(paste0(temp_dir, "gadm41_MOZ_0.shp"))
+
+# check coordinates of sampling sites
+adaptive_table %>%
+  group_by(Province, District) %>%
+  summarise(lat_median=median(Latitude),
+            lon_median=median(Longitude),
+            lat_min=min(Latitude),
+            lon_min=min(Longitude),
+            lat_max=max(Latitude),
+            lon_max=max(Longitude))
+
+# generate coordinates of predictive grid points
+adaptive_grid <- 
+  bind_rows(
+    # grid points for the Moamba district
+    expand_grid(Longitude=seq(32, 32.35, length=20),
+                Latitude=seq(-25.75, -25.4, length=20)) %>%
+      mutate(Province="Maputo", District="Moamba")
+    ,
+    # grid points for the Gurue district
+    expand_grid(Longitude=seq(36.55, 36.95, length=20),
+                Latitude=seq(-15.5, -15.1, length=20)) %>%
+      mutate(Province="Zambezia", District="Gurue")
+    ,
+    # grid points for the Morrumbala district
+    expand_grid(Longitude=seq(35.4, 35.7, length=20),
+                Latitude=seq(-17.5, -17.2, length=20)) %>%
+      mutate(Province="Zambezia", District="Morrumbala")
+  ) %>%
+  relocate(Longitude, Latitude, .after=District)
+
+plot(Moz_map)
+points(adaptive_grid$Longitude, 
+       adaptive_grid$Latitude,
+       pch="+", col="red", cex=0.1)
+
+points(adaptive_table$Longitude,
+       adaptive_table$Latitude,
+       col="blue", cex=0.1)  
+
+dev.copy2pdf(file=paste0(temp_dir, "grid.pdf"), width=7, height=11)
+
+# add time (Year, Month) to predictive grid data
+# by sampling sampling times
+adaptive_grid <-
+  bind_rows(
+    adaptive_grid %>% 
+      filter(District == "Moamba") %>%
+      bind_cols(
+        adaptive_table %>%
+          as_tibble() %>%
+          filter(District == "Moamba") %>%
+          select(Year, Month) %>%
+          slice_sample(n=400, replace=TRUE) 
+      )
+    ,
+    adaptive_grid %>% 
+      filter(District == "Gurue") %>%
+      bind_cols(
+        adaptive_table %>%
+          as_tibble() %>%
+          filter(District == "Gurue") %>%
+          select(Year, Month) %>%
+          slice_sample(n=400, replace=TRUE) 
+      )
+    ,
+    adaptive_grid %>% 
+      filter(District == "Morrumbala") %>%
+      bind_cols(
+        adaptive_table %>%
+          as_tibble() %>%
+          filter(District == "Morrumbala") %>%
+          select(Year, Month) %>%
+          slice_sample(n=400, replace=TRUE) 
+      )
+  )
+
+# save adaptive grid
+saveRDS(adaptive_grid, 
+        file=paste0(data_path, "adaptive_grid.rds"))
+
+# =========================================================
 
 
 
@@ -174,6 +269,13 @@ saveRDS(adaptive_table,
 
 
 
+
+
+
+
+
+
+# =========================================================
 filed_data[["Gurue"]] %>% count(`Collection method`)
 # path to the data directory
 data_path <- "~/Downloads/Mozambique/"

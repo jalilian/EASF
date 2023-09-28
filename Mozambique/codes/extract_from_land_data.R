@@ -74,14 +74,26 @@ get_covars <- function(data_table, land_data)
   return(data_table)
 }
 
-# read adaptive_table
+# read adaptive table
 data_path <- "~/Downloads/Mozambique/"
 adaptive_table <- 
   readRDS(paste0(data_path, "adaptive_table.rds"))
+# read adaptive grid data
+adaptive_grid <- 
+  readRDS(paste0(data_path, "adaptive_grid.rds"))
+
 
 # extract land data for the adaptive table
 adaptive_table_covars <- 
   get_covars(adaptive_table, land_data)
 
+# extract land data for the adaptive grid
+adaptive_grid_covars <- 
+  get_covars(adaptive_grid, land_data)
+
+# save data table and grid with covariates
 saveRDS(adaptive_table_covars, 
         file=paste0(data_path, "adaptive_table_coavrs.rds"))
+
+saveRDS(adaptive_grid_covars, 
+        file=paste0(data_path, "adaptive_grid_coavrs.rds"))
