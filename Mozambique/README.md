@@ -43,3 +43,5 @@ Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 
 |Zambezia| Gurue | HLC |  Grassland 1 <br> Cropland 10 <br> Built-up areas 1|
 |Zambezia| Morrumbala | AL-CDC | Cropland 12 |
 |Zambezia| Morrumbala | Prokopack | Cropland 12 |
+
+### Elevation

@@ -53,33 +53,57 @@ get_land_cover <- function(x, y)
 
 # =========================================================
 
-# download shapefile of Mozambique boundary
+if (FALSE)
+{
+  # download shapefile of Mozambique boundary
+  download.file(
+    url="https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_MOZ_shp.zip",
+    destfile="Moz_map.zip")
+  
+  # extract the shapefile
+  unzip(zipfile="Moz_map.zip", exdir=temp_dir)
+  # read the shapefile
+  Moz_map <- vect(paste0(temp_dir, "gadm41_MOZ_0.shp"))
+  
+  # crop the land cover data to the polygone in the shapefile
+  Moz_land_cover <- 
+    terra::crop(africa_land_cover, ext(Moz_map))
+  
+  plot(Moz_land_cover, fun=lines(Moz_map))
+  
+  aa <- focal(Moz_land_cover, w=3, fun=mean)
+  
+  aa <- africa_land_cover
+  ext(aa) <- c(xmin=35.565, xmax=35.6, ymin=-17.345, ymax=-17.29)
+  test <- crop(africa_land_cover, 
+               ext(aa))
+  plot(test)
+  bb <- adaptive_table_covars %>% 
+    distinct(`House ID`, .keep_all=TRUE)
+  points(bb$Longitude, 
+         bb$Latitude, pch="+")
+}
+
+# =========================================================
+# Shuttle Radar Topography Mission (SRTM) 30 metres 
+# Elevation data
+# 
+# link: https://rcmrd.africageoportal.com/datasets/rcmrd::mozambique-srtm30meters/about
 download.file(
-  url="https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_MOZ_shp.zip",
-  destfile="Moz_map.zip")
+  "https://s3.amazonaws.com/rcmrd-open-data/downloadable_files/Mozambique_SRTM30meters.zip",
+  destfile="Moz_STRM30m.zip")
 
-# extract the shapefile
-unzip(zipfile="Moz_map.zip", exdir=temp_dir)
-# read the shapefile
-Moz_map <- vect(paste0(temp_dir, "gadm41_MOZ_0.shp"))
+unzip(zipfile="Moz_STRM30m.zip", exdir=temp_dir)
 
-# crop the land cover data to the polygone in the shapefile
-Moz_land_cover <- 
-  terra::crop(africa_land_cover, ext(Moz_map))
+Moz_strm30 <- rast("Mozambique_SRTM30meters.tif")
 
-plot(Moz_land_cover, fun=lines(Moz_map))
+plot(Moz_strm30)
 
-aa <- focal(Moz_land_cover, w=3, fun=mean)
-
-aa <- africa_land_cover
-ext(aa) <- c(xmin=35.565, xmax=35.6, ymin=-17.345, ymax=-17.29)
-test <- crop(africa_land_cover, 
-             ext(aa))
-plot(test)
-bb <- adaptive_table_covars %>% 
-  distinct(`House ID`, .keep_all=TRUE)
-points(bb$Longitude, 
-       bb$Latitude, pch="+")
+# function to extract elevation by coordinates
+get_elevation <- function(x, y)
+{
+  terra::extract(Moz_strm30, cbind(x, y))
+}
 # =========================================================
 # read adaptive_table_covars data
 data_path <- "~/Downloads/Mozambique/"
@@ -87,13 +111,27 @@ adaptive_table_covars <-
   readRDS(paste0(data_path, "adaptive_table_coavrs.rds"))
 
 library("tidyverse")
+# add land cover and elevation to the covariates
 adaptive_table_covars <- 
   adaptive_table_covars %>%
   as_tibble() %>%
   mutate(land_cover=
-           get_land_cover(Longitude, Latitude))
+           get_land_cover(Longitude, Latitude),
+         elevation=
+           get_elevation(Longitude, Latitude))
 
+# check land cover
 adaptive_table_covars %>%
   distinct(`House ID`, .keep_all=TRUE) %>%
   group_by(Province, District, `Collection method`) %>%
   count(land_cover)
+
+# check elevation
+adaptive_table_covars %>%
+  distinct(`House ID`, .keep_all=TRUE) %>%
+  group_by(Province, District, `Collection method`) %>%
+  select(elevation)
+
+# save the updated data
+saveRDS(adaptive_table_covars, 
+        file=paste0(data_path, "adaptive_table_coavrs.rds"))
