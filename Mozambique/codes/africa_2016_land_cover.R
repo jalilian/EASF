@@ -53,6 +53,34 @@ get_land_cover <- function(x, y)
 
 # =========================================================
 
+# download shapefile of Mozambique boundary
+download.file(
+  url="https://geodata.ucdavis.edu/gadm/gadm4.1/shp/gadm41_MOZ_shp.zip",
+  destfile="Moz_map.zip")
+
+# extract the shapefile
+unzip(zipfile="Moz_map.zip", exdir=temp_dir)
+# read the shapefile
+Moz_map <- vect(paste0(temp_dir, "gadm41_MOZ_0.shp"))
+
+# crop the land cover data to the polygone in the shapefile
+Moz_land_cover <- 
+  terra::crop(africa_land_cover, ext(Moz_map))
+
+plot(Moz_land_cover, fun=lines(Moz_map))
+
+aa <- focal(Moz_land_cover, w=3, fun=mean)
+
+aa <- africa_land_cover
+ext(aa) <- c(xmin=35.565, xmax=35.6, ymin=-17.345, ymax=-17.29)
+test <- crop(africa_land_cover, 
+             ext(aa))
+plot(test)
+bb <- adaptive_table_covars %>% 
+  distinct(`House ID`, .keep_all=TRUE)
+points(bb$Longitude, 
+       bb$Latitude, pch="+")
+# =========================================================
 # read adaptive_table_covars data
 data_path <- "~/Downloads/Mozambique/"
 adaptive_table_covars <- 

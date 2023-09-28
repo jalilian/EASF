@@ -20,13 +20,18 @@ The sampling plan so far has been executed according to the following table:
 |Zambezia| Morrumbala | Prokopack | 12 | 2022: Oct (1), Nov (1) <br> 2023: Jan (2), Feb (2), Mar (1), Apr (2), May (2), Jun (3), Jul (3), Aug (1) |
 
 ## Environmental data
-Environmental data are obtained from the [Copernicus's Climate Data Store (CDS)](https://cds.climate.copernicus.eu), European Centre for Medium-Range Weather Forecasts (ECMWF). DOI: 10.24381/cds.68d2bb30
+
+Environmental data are obtained from the following open access sources.
+
+### Climate, soil moisture and vegetation data
+The [Copernicus's Climate Data Store (CDS)](https://cds.climate.copernicus.eu), European Centre for Medium-Range Weather Forecasts (ECMWF). DOI: 10.24381/cds.68d2bb30
 
 The extracted data for Mozambique can be directly imported to ```R``` with the following command:
 ```R
 land_data <- readRDS(url("https://github.com/jalilian/EASF/raw/main/Mozambique/cds_land_data.rds"))
 ```
 
+### Lancover data
 The [S2 Prototype Land Cover 20m Map of Africa 2016](https://2016africalandcover20m.esrin.esa.int/) data are used for extracting land cover type of the sampling locations. This data is provided to the public by the ESA Climate Change Initiative and its Land Cover project as the source of the CCI-LC database.
 
 The land cover type of sampling locations is as follows:
