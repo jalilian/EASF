@@ -10,30 +10,34 @@ land_data <-
 # returns environmental covariates from the satellite land data
 get_covars <- function(data_table, land_data)
 {
-  if (!all(c("Longitude", "Latitude", "Year", "Month") %in%
-           colnames(data_table)))
+  # check if required columns exist
+  required_cols <- c("Longitude", "Latitude", "Year", "Month")
+  if (!all(required_cols %in% colnames(data_table))) 
   {
-    stop("data table must conatin columns with the names: Longitude, Latitude, Year, and Month")
+    stop("data table must contain columns with names: ", 
+         paste(required_cols, collapse = ", "))
   }
-  # coordinates of the land data
+
+  # grid of unique land data coordinates
   land_grid <- expand_grid(x0=unique(land_data %>% 
                                        pull(longitude)),
                            y0=unique(land_data %>% 
                                        pull(latitude)))
   
-  # coordinates of the sampling site
+  # coordinates of the data site
   x1 <- data_table %>% pull(Longitude)
   y1 <- data_table %>% pull(Latitude)
   
-  # squared Eucleadian distance
+  # squared Euclidean distance for all data locations to land data coordinates
   dd <- outer(x1, land_grid$x0, "-")^2 +
     outer(y1, land_grid$y0, "-")^2
   
-  # for each sampling site find the closest land data location
+  # index of the closest land data location for each data location
   idx <- apply(dd, 1, which.min)
   land_grid <- land_grid %>%
     slice(idx)
   
+  # extract land data for each data location and time
   covars <- NULL
   for (i in 1:nrow(data_table))
   {
@@ -64,12 +68,11 @@ get_covars <- function(data_table, land_data)
       bind_rows(covars_i)
   }
   
+  # Combine data_table and covariate data
   data_table <- data_table %>% 
     bind_cols(covars)
   return(data_table)
 }
-
-
 
 # read adaptive_table
 data_path <- "~/Downloads/Mozambique/"
