@@ -150,20 +150,20 @@ land_data  %>%
 
 plot_fun <- function(var, year, month)
 {
-  dat %>% 
+  land_data %>% 
     filter(year == year & month == month) %>%
     ggplot(aes_string(x="longitude", 
                       y="latitude", 
                       fill=var)) +
     geom_tile() +
     # borders("world", 
-    #          xlim=range(dat %>% pull(longitude)), 
-    #          ylim=range(dat %>% pull(latitude))) +
+    #          xlim=range(land_data %>% pull(longitude)), 
+    #          ylim=range(land_data %>% pull(latitude))) +
     coord_quickmap()
 }
 
 plot_fun("tp_mean", "2022", "05")
-
+plot_fun("swvl1_sd", "2023", "09")
 # ===============================================
 # save land data as an R object of class data.frame
 saveRDS(land_data, file="cds_land_data.rds")
