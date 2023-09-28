@@ -8,6 +8,19 @@
 # © ESA Climate Change Initiative - Land Cover project 2017
 
 # format: GeoTIFF
+# value codes
+# 0	No data
+# 1	Tree cover areas
+# 2	Shrubs cover areas
+# 3	Grassland
+# 4	Cropland
+# 5	Vegetation aquatic or regularly flooded
+# 6	Lichens Mosses / Sparse vegetation
+# 7	Bare areas
+# 8	Built up areas
+# 9	Snow and/or Ice
+# 10	Open Water
+
 # =========================================================
 
 # Create a temporary directory to download map data
@@ -23,9 +36,9 @@ downloaded_file <-
 unzip(zipfile=downloaded_file, exdir=temp_dir)
 
 # read the africa 2016 land cover
-library("raster")
+library("terra")
 africa_land <- 
-  raster(paste0(temp_dir, 
+  rast(paste0(temp_dir, 
                 "ESACCI-LC-L4-LC10-Map-20m-P1Y-2016-v1.0.tif"))
 
 # get Mozambique shapefile
@@ -43,7 +56,9 @@ moz_map <- read_sf(temp_dir,
 
 # crop the raster map of Africa 2016 lancover to Mozambique map
 
-moz_land <- crop(africa_land, extent(moz_map))
+moz_land <- 
+  terra::crop(africa_land, 
+              ext(moz_map), snap="near")
 
 library("tidyverse")
 africa_land %>%
