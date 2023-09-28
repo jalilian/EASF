@@ -142,6 +142,11 @@ land_data <-
   bind_rows() %>% 
   as_tibble()
 
+# change the months from numbers to names
+land_data <-
+  land_data %>% 
+  mutate(month=month.name[as.integer(month)])
+
 # check the years and months
 land_data  %>%
   count(year, month)
@@ -162,8 +167,8 @@ plot_fun <- function(var, year, month)
     coord_quickmap()
 }
 
-plot_fun("tp_mean", "2022", "05")
-plot_fun("swvl1_sd", "2023", "09")
+plot_fun("tp_mean", "2022", "May")
+plot_fun("swvl1_sd", "2023", "September")
 # ===============================================
 # save land data as an R object of class data.frame
 saveRDS(land_data, file="cds_land_data.rds")
