@@ -53,6 +53,39 @@ get_land_cover <- function(x, y)
 
 # =========================================================
 
+# World Wildlife Fund. Africa: 
+# Void-filled digital elevation mode, 2007 [ArcGRID]
+# resolution: 15s resolution
+# U.S. Geological Survey. 
+# Retrieved from https://maps.princeton.edu/catalog/stanford-jm998sr5227 
+
+
+# set connection timeout
+options(timeout=1000)
+
+# download the digital elevation model
+download.file(
+  url="https://stacks.stanford.edu/file/druid:jm998sr5227/data.zip",
+  destfile="africa_elevation.zip")
+
+
+# extract the downloaded file
+unzip(zipfile="africa_elevation.zip", exdir=temp_dir)
+
+# read the Africa dem 15 ars second map
+africa_elevation <- rast("af_dem_15s/")
+
+# plot the elevation map
+plot(africa_elevation)
+
+# function to extract land cover type by coordinates
+get_elevation2 <- function(x, y)
+{
+  terra::extract(africa_elevation, cbind(x, y))
+}
+
+# =========================================================
+
 if (FALSE)
 {
   # download shapefile of Mozambique boundary
