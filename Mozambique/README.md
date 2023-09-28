@@ -33,7 +33,7 @@ The land cover type of sampling locations is as follows:
 |Province|District| Collection Method|Land cover type of sampling locations |
 | ---- | ---------- | ----- | ----- |
 Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 1 <br> Vegetation aquatic or regularly flooded 2 <br> Built-up areas 10 |
-|Maputo  | Moamba | Flit | |
+|Maputo  | Moamba | Flit | Shrubs cover areas 1 <br> Grassland 2 <br>  Cropland 2 <br> Vegetation aquatic or regularly flooded 4 <br> Built-up areas 3|
 |Niassa| | | |
 |Zambezia| Gurue | HLC | |
 |Zambezia| Morrumbala | AL-CDC | |
