@@ -18,3 +18,11 @@ The sampling plan so far has been executed according to the following table:
 |Zambezia| Gurue | HLC | 12 | 2022: Sep (4), Oct (3), Nov (2) <br> 2023: Jan (2), Feb (2), Mar (2), Apr (2), May (2), Jun (2), Jul (2), Aug (2) |
 |Zambezia| Morrumbala | AL-CDC | 12 | 2022: Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3), Mar (3), Apr (3), May (3), Jun (3), Jul (3), Aug (3) |
 |Zambezia| Morrumbala | Prokopack | 12 | 2022: Oct (1), Nov (1) <br> 2023: Jan (2), Feb (2), Mar (1), Apr (2), May (2), Jun (3), Jul (3), Aug (1) |
+
+## Environmental data
+Environmental data are obtained from the [Copernicus's Climate Data Store (CDS)](https://cds.climate.copernicus.eu), European Centre for Medium-Range Weather Forecasts (ECMWF). DOI: 10.24381/cds.68d2bb30
+
+The extracted data for Mozambique can be directly imported to ```R``` with the following command:
+```R
+land_data <- readRDS(url("https://github.com/jalilian/EASF/raw/main/Mozambique/cds_land_data.rds"))
+```
