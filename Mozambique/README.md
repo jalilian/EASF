@@ -28,3 +28,13 @@ land_data <- readRDS(url("https://github.com/jalilian/EASF/raw/main/Mozambique/c
 ```
 
 The [S2 Prototype Land Cover 20m Map of Africa 2016](https://2016africalandcover20m.esrin.esa.int/) data are used for extracting land cover type of the sampling locations. This data is provided to the public by the ESA Climate Change Initiative and its Land Cover project as the source of the CCI-LC database.
+
+The land cover type of sampling locations is as follows:
+|Province|District| Collection Method|Land cover type of sampling locations |
+| ---- | ---------- | ----- | ----- |
+Maputo  | Moamba | AL-CDC | |
+|Maputo  | Moamba | Flit | |
+|Niassa| | | |
+|Zambezia| Gurue | HLC | |
+|Zambezia| Morrumbala | AL-CDC | |
+|Zambezia| Morrumbala | Prokopack | |

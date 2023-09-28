@@ -64,6 +64,8 @@ adaptive_table_covars <-
   as_tibble() %>%
   mutate(land_cover=
            get_land_cover(Longitude, Latitude))
-         
+
 adaptive_table_covars %>%
+  distinct(`House ID`, .keep_all=TRUE) %>%
+  group_by(Province, District, `Collection method`) %>%
   count(land_cover)
