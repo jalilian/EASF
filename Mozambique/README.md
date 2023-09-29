@@ -12,11 +12,7 @@ The sampling plan so far has been executed according to the following table:
 
 |Province|District|Collection Method|Number of sampling locations | Sampling months (number of collections)|
 | ---- | ---------- | ----- |  ----- | ---- | 
-|Maputo  | Moamba | AL-CDC | 18 | 2022-09-13 (6), 
- 2022-09-14 (15)
- 2022-09-15 (18)
- 2022-09-16 (12)
- 2022-10-18                        12
+|Maputo  | Moamba | AL-CDC | 18 | 2022-09-13 (6), 2022-09-14 (15), 2022-09-15 (18),  2022-09-16 (12) <br> 2022-10-18                        (12)
  2022-10-19                        18
  2022-10-20                        18
  2022-10-21                         6
