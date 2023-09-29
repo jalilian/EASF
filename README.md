@@ -14,4 +14,4 @@ The following data sources are used for this project:
 - [Mozambique](/Mozambique/)
 
 ## Background
-Adaptive spatial sampling
+[Adaptive spatial sampling](adaptive_spatial_sampling.md)

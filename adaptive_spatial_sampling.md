@@ -1,0 +1,3 @@
+# Adaptive spatial sampling
+
+## Resources
