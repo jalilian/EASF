@@ -12,20 +12,7 @@ The sampling plan so far has been executed according to the following table:
 
 |Province|District|Collection Method|Number of sampling locations | Sampling months (number of collections)|
 | ---- | ---------- | ----- |  ----- | ---- | 
-|Maputo  | Moamba | AL-CDC | 18 | 2022-09-13 (6), 2022-09-14 (15), 2022-09-15 (18),  2022-09-16 (12) <br> 2022-10-18                        (12)
- 2022-10-19                        18
- 2022-10-20                        18
- 2022-10-21                         6
- 2022-11-09                        17
- 2022-11-10                        17
- 2022-11-11                        18
- 2023-01-11                        18
- 2023-01-12                        18
- 2023-01-13                        18
- 2023-02-02                        16
- 2023-02-03                        16
- 2023-02-04                        16
-2022: Sep (3), Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3) |
+|Maputo  | Moamba | AL-CDC | 18 | 2022-09-13 (6), 2022-09-14 (15), 2022-09-15 (18),  2022-09-16 (12) <br> 2022-10-18 (12), 2022-10-19 (18), 2022-10-20 (18), 2022-10-21 (6) <br> 2022-11-09 (17), 2022-11-10 (17), 2022-11-11 (18) <br> 2023-01-11 (18), 2023-01-12 (18), 2023-01-13 (18) <br> 2023-02-02 (16), 2023-02-03 (16), 2023-02-04 (16) |
 |Maputo  | Moamba | Flit | 12 | 2022: Sep (3), Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3) |
 |Niassa| | | | |
 |Zambezia| Gurue | HLC | 12 | 2022: Sep (4), Oct (3), Nov (2) <br> 2023: Jan (2), Feb (2), Mar (2), Apr (2), May (2), Jun (2), Jul (2), Aug (2) |
