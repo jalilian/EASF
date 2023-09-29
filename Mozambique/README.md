@@ -10,14 +10,15 @@ The EASF project has been operated across three provinces in Mozambique, which a
 ## Sampling program
 The sampling plan so far has been executed according to the following table:
 
-|Province|District|Collection Method|Number of sampling locations | Sampling months (number of collections)|
+|Province|District|Collection Method|Number of sampling locations | Sampling dates (number of collections)|
 | ---- | ---------- | ----- |  ----- | ---- | 
 |Maputo  | Moamba | AL-CDC | 18 | 2022-09-13 (6), 2022-09-14 (15), 2022-09-15 (18),  2022-09-16 (12) <br> 2022-10-18 (12), 2022-10-19 (18), 2022-10-20 (18), 2022-10-21 (6) <br> 2022-11-09 (17), 2022-11-10 (17), 2022-11-11 (18) <br> 2023-01-11 (18), 2023-01-12 (18), 2023-01-13 (18) <br> 2023-02-02 (16), 2023-02-03 (16), 2023-02-04 (16) |
 |Maputo  | Moamba | Flit | 12 |  2022-09-13 (4),  2022-09-14 (4), 2022-09-15 (4) <br>  2022-10-19 (4),  2022-10-20 (4), 2022-10-21 (4) <br>  2022-11-09 (4),  2022-11-10 (4),  2022-11-11 (4) <br>  2023-01-11 (4),  2023-01-12 (4),  2023-01-13 (4) <br> 2023-02-02 (4), 2023-02-03 (4), 2023-02-04 (4) |
 |Niassa| | | | |
 |Zambezia| Gurue | HLC | 12 | 2022: Sep (4), Oct (3), Nov (2) <br> 2023: Jan (2), Feb (2), Mar (2), Apr (2), May (2), Jun (2), Jul (2), Aug (2) |
 |Zambezia| Morrumbala | AL-CDC | 12 | 2022: Oct (3), Nov (3) <br> 2023: Jan (3), Feb (3), Mar (3), Apr (3), May (3), Jun (3), Jul (3), Aug (3) |
-|Zambezia| Morrumbala | Prokopack | 12 | 2022: Oct (1), Nov (1) <br> 2023: Jan (2), Feb (2), Mar (1), Apr (2), May (2), Jun (3), Jul (3), Aug (1) |
+|Zambezia| Morrumbala | Prokopack | 12 | 
+ 2022-10-20 (12) <br> 2022-11-15 (12) <br>  2023-01-14 (3),  2023-01-15 (6),  2023-01-16 (3) <br>  2023-02-06 (3),  2023-02-07 (9) <br>  2023-03-08 (12) <br>  2023-04-11 (9),  2023-04-12 (3) <br>  2023-05-03 (3),  2023-05-04 (9) <br>  2023-06-19 (1),  2023-06-20 (8),  2023-06-22 (3) <br>  2023-07-07 (3),  2023-07-08 (6),  2023-07-09 (3) <br>  2023-08-02 (12) |
 
 ## Environmental data
 
