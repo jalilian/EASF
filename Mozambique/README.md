@@ -24,7 +24,7 @@ The sampling plan so far has been executed according to the following table:
 Environmental data are obtained from the following open access sources.
 
 ### Climate, soil moisture and vegetation data
-The [Copernicus's Climate Data Store (CDS)](https://cds.climate.copernicus.eu), European Centre for Medium-Range Weather Forecasts (ECMWF) is used to extract surface skin temperature (skt), total precipitation (tp), volumetric soil water layer 1 (swvl1), leaf area index, high vegetation (lai_hv), and leaf area index, low vegetation (lai_lv). The CDS is publicly accessible with the DOI: [10.24381/cds.68d2bb30](https://doi.org/10.24381/cds.68d2bb30).
+The [Copernicus's Climate Data Store (CDS)](https://cds.climate.copernicus.eu), European Centre for Medium-Range Weather Forecasts (ECMWF) is used to extract surface skin temperature (skt), total precipitation (tp), volumetric soil water layer 1 (swvl1), leaf area index, high vegetation (lai_hv), and leaf area index, low vegetation (lai_lv). The CDS is publicly accessible with the DOI: [10.24381/cds.e2161bac](https://doi.org/10.24381/cds.e2161bac).
 
 The extracted data for Mozambique can be directly imported to ```R``` with the following command:
 ```R

@@ -10,7 +10,7 @@ library("ecmwfr")
 # European Centre for Medium-Range Weather Forecasts (ECMWF) 
 # Copernicus's Climate Data Store (CDS)
 # https://cds.climate.copernicus.eu
-# DOI: 10.24381/cds.68d2bb30
+# DOI: 10.24381/cds.e2161bac
 
 # spatial resolution: 0.1x0.1 degrees
 # temporal resolution: Hourly
