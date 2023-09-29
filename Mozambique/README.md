@@ -1,7 +1,7 @@
 # Mozambique
 The EASF project has been operated across three provinces in Mozambique, which are as follows:
 
-|Province|Area (sq. km)|Number of districts|Population| Selected Districts |
+|Province|Area (sq. km)|Number of districts|Population| Selected districts |
 | ------ | ------- | ----- | ---- | --- | 
 |Maputo  | 26,011  |  7 | 2,507,098 | Moamba |
 |Niassa  | 129,056 | 15 | 1,865,976 | |
