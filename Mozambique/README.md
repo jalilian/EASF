@@ -45,4 +45,4 @@ Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 
 |Zambezia| Morrumbala | Prokopack | Cropland 12 |
 
 ### Elevation
-The [Shuttle Radar Topography Mission (SRTM) 30 metres](https://www.usgs.gov/centers/eros/science/usgs-eros-archive-digital-elevation-shuttle-radar-topography-mission-srtm-1?qt-science_center_objects=0#qt-science_center_objects) is used for extracting elevation data.
+Elevation data are extracted from the digital elevation model (DEM) provided by [Shuttle Radar Topography Mission (SRTM)](https://www.usgs.gov/centers/eros/science/usgs-eros-archive-digital-elevation-shuttle-radar-topography-mission-srtm-1?qt-science_center_objects=0#qt-science_center_objects) with 1 arc second (30 meter) resolution.
