@@ -174,8 +174,22 @@ download.file(
 unzip(zipfile=paste0(temp_dir, "Moz_map.zip"), 
       exdir=temp_dir)
 # read the shapefile
-library("terra")
-Moz_map <- vect(paste0(temp_dir, "gadm41_MOZ_0.shp"))
+library("sf")
+Moz_map <-
+  read_sf(temp_dir, layer="gadm41_MOZ_3")
+
+Moz_map %>% 
+  ggplot() + geom_sf() +
+  geom_sf(data=Moz_map %>%
+            filter(NAME_2 %in% 
+                     c("Moamba", "Gurue", "Morrumbala")
+            ), fill="blue") +
+  geom_point(data=adaptive_table %>%
+               distinct(Longitude, Latitude),
+             aes(x=Longitude, y=Latitude),
+             col="red", shape=2, size=0.5)
+
+
 
 # check coordinates of sampling sites
 adaptive_table %>%

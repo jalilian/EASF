@@ -7,6 +7,8 @@ The EASF project has been operated across three provinces in Mozambique, which a
 |Niassa  | 129,056 | 15 | 1,865,976 |
 |Zambezia| 105,008 | 16 | 5,110,787 |
 
+![Mozambique](/Mozambique/images/Mozambique.png)
+
 ## Sampling program
 The sampling plan so far has been executed according to the following table:
 
