@@ -181,6 +181,10 @@ Moz_map <-
 Moz_map %>% 
   ggplot() + geom_sf() +
   geom_sf(data=Moz_map %>%
+            filter(NAME_1 %in% 
+                     c("Maputo", "Nassa", "Zambezia")
+                   ), fill="grey50") +
+  geom_sf(data=Moz_map %>%
             filter(NAME_2 %in% 
                      c("Moamba", "Gurue", "Morrumbala")
             ), fill="blue") +
