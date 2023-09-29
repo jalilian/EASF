@@ -8,7 +8,10 @@ The main objective for this project is to answer the following question:
 > 2) vector species composition; and 
 > 3) vector bionomics in a specific geography?
 
-## Date
+## Data
 The following data sources are used for this project:
 - [Ghana](/Ghana/)
 - [Mozambique](/Mozambique/)
+
+## Background
+Adaptive spatial sampling
