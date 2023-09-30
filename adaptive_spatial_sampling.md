@@ -17,7 +17,8 @@ Objectives of spatial smapling
 Types of spatial sampling designs
 - random vs non-random spatial sampling designs
   + random sampling designs: selection of population unites is based on a specific well-defined probability distribution
-    - simple (completely) random sampling: uniform spatial distribution
+    - simple (completely) random sampling: uniform spatial distribution, ensuring each population unit has an equal chance of being selected
+    - inhibitory sampling: spatial distributions with zero probability for selection of close population units
     - stratified sampling: partitioning the population units into strata, and specifying a probability distribution for each stratum 
     - cluster sampling: dividing the population units into clusters, and specifying a probability distribution on these clusters
     - systematic sampling: a regular spatial pattern with a random start
