@@ -27,6 +27,9 @@ Types of spatial sampling designs
     - arbitrary sampling: selection of population units is based on subjective judgment
 - adaptive and non-adaptive spatial sampling designs
   + adaptive sampling designs: use information from previously selected population units to improve the selection of additional units in each sampling round
+    - sequential adaptive sampling: selection of population units is done one at a time, and the decision on the selection of the next unit depends on the results of the previous observations
+    - batch adaptive sampling: selection of the population units are done in predefined groups or batches, and selection of the next batch depends on the results of the previous batches
+    
   + non-adaptive: selection of population units remains unchanged throughout the sampling process
 
 ## Resources
