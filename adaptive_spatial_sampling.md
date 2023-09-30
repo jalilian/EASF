@@ -16,17 +16,19 @@ Objectives of spatial smapling
 
 Types of spatial sampling designs
 - random vs non-random spatial sampling designs
-  + random sampling designs: selection of population unites is based on a specific known probability distribution
-    - simple (completely) random sampling
-    - stratified sampling
-    - cluster sampling
-    - systematic sampling	
-  + non-random sampling designs: selection of population unites is based on anything but a probability distribution
-    - convenience sampling
-    - ease of access sampling 
-    - target specific sampling; e.g., spatial coverage 
-    - arbitrary sampling
+  + random sampling designs: selection of population unites is based on a specific well-defined probability distribution
+    - simple (completely) random sampling: uniform spatial distribution
+    - stratified sampling: partitioning the population units into strata, and specifying a probability distribution for each stratum 
+    - cluster sampling: dividing the population units into clusters, and specifying a probability distribution on these clusters
+    - systematic sampling: a regular spatial pattern with a random start
+  + non-random sampling designs: selection of population unites does not rely on a probability distribution 
+    - convenience sampling: selection of population units is based on convenience and ease of access 
+    - target specific sampling: selection of population units is based on a particular criterion, such as spatial coverage 
+    - arbitrary sampling: selection of population units is based on subjective judgment
 - adaptive and non-adaptive spatial sampling designs
+  + adaptive sampling designs: use information from previously selected population units to improve the selection of additional units in each sampling round
+  + non-adaptive: selection of population units remains unchanged throughout the sampling process
+
 ## Resources
 Books
 - Brus, D. J. (2022). [Spatial sampling with R](https://dickbrus.github.io/SpatialSamplingwithR/). CRC Press.
