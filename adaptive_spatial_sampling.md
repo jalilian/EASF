@@ -32,6 +32,11 @@ Types of spatial sampling designs
     
   + non-adaptive: selection of population units remains unchanged throughout the sampling process
 
+|     | approach: model-based statistical inference | approach: model-free statistical inference |
+| --- | --------------------------------- | -------------------------------- |
+objective: parameter estimation        | random sampling designs are more efficient| random sampling designs are more efficient |
+objective: spatial predicton (mapping) | non-random sampling designs are more efficient | none are efficient |
+
 ## Resources
 Books
 - Brus, D. J. (2022). [Spatial sampling with R](https://dickbrus.github.io/SpatialSamplingwithR/). CRC Press.
