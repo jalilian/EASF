@@ -9,6 +9,10 @@ Objectives of spatial sampling
 - estimation of parameters or characteristics of the spatial population
 - spatial prediction (mapping) of unobserved unites of the spatial population
 
+Types of statistical inferences for spatial populations
+- model-based inferences: consider statistical models to describe the underlying processes or relationships within the spatial population
+- non-model-based inference: rely on the probability distribution of the sampling process and resampling techniques to generalize the sample results to the population
+
 Types of spatial sampling designs
 - random vs non-random spatial sampling designs
   + random sampling designs: selection of population unites is based on a specific well-defined probability distribution
