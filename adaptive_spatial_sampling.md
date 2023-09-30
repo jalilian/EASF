@@ -1,17 +1,12 @@
----
-output:
-  html_document: default
-  pdf_document: default
----
 # Adaptive spatial sampling
 
 ## Concepts
 Types of spatial populations
 - discrete spatial population
-- continuious spatial population
+- continuous spatial population
 
-Objectives of spatial smapling
-- estimation of prameters or characteristics of the spatial population
+Objectives of spatial sampling
+- estimation of parameters or characteristics of the spatial population
 - spatial prediction (mapping) of unobserved unites of the spatial population
 
 Types of spatial sampling designs
