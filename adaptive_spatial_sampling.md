@@ -11,6 +11,12 @@ Objectives of spatial smapling
 
 Types of spatial sampling designs
 - random vs non-random spatial sampling designs
+  + random sampling designs: population unites are selected based on a specific probability distribution
+    - simple (completely) random sampling
+    - stratified sampling
+    - cluster sampling
+    - systematic sampling	
+  + non-random sampling desings: population unites are selected based on convenience, ease of access, specific target, or arbitrary
 - adaptive and non-adaptive spatial sampling designs
 ## Resources
 Books
