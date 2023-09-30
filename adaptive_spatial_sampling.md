@@ -40,6 +40,7 @@ objective: spatial predicton (mapping) | non-random sampling designs are more ef
 ## Resources
 Books
 - Brus, D. J. (2022). [Spatial sampling with R](https://dickbrus.github.io/SpatialSamplingwithR/). CRC Press.
+- Diggle, P. J., & Ribeiro, P. J. (2007). Model-based Geostatistics. Springer, [Chapter 8:  Geostatistical design](https://doi.org/10.1007/978-0-387-48536-2_8).
 - Gruijter, J. J., Bierkens, M. F., Brus, D. J., & Knotters, M. (2006). [Sampling for natural resource monitoring](https://doi.org/10.1007/3-540-33161-1). Springer-Verlag Berlin Heidelberg.
 - Müller, W. G. (2007). [Collecting spatial data: optimum design of experiments for random fields](https://doi.org/10.1007/978-3-540-31175-1). Springer Science & Business Media.
 - Mateu, J., & Müller, W. G. (Eds.). (2012). [Spatio-temporal design: Advances in efficient data acquisition](https://www.wiley.com/en-gb/Spatio+temporal+Design%3A+Advances+in+Efficient+Data+Acquisition-p-9781118441886). John Wiley & Sons.
