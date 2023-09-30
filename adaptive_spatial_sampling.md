@@ -22,7 +22,7 @@ Types of spatial sampling designs
     - cluster sampling: dividing the population units into clusters, and specifying a probability distribution on these clusters
     - systematic sampling: a regular spatial pattern with a random start
   + non-random sampling designs: selection of population unites does not rely on a probability distribution 
-    - convenience sampling: selection of population units is based on convenience and ease of access 
+    - preferential sampling: selection of population units is based on values of the study varible, previous information, convenience, or ease of access 
     - target specific sampling: selection of population units is based on a particular criterion, such as spatial coverage 
     - arbitrary sampling: selection of population units is based on subjective judgment
 - adaptive and non-adaptive spatial sampling designs
