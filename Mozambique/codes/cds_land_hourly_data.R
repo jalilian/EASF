@@ -27,18 +27,22 @@ wf_set_key(user=user, key=cds.key, service="cds")
 ym <- rbind(
   cbind("2022", sprintf("%02d", 5:12)),
   cbind("2023", sprintf("%02d", 1:9))
-)
+  )
 
 # download land data for all combinations of years and months
 for (i in split(ym, row(ym)))
 {
   # request for getting land data
   request <- list(
+    # dataset name
+    dataset_short_name = "reanalysis-era5-land",
+    # climate variables 
     variable = c("leaf_area_index_high_vegetation", 
                  "leaf_area_index_low_vegetation", 
                  "skin_temperature", 
                  "total_precipitation", 
                  "volumetric_soil_water_layer_1"),
+    # temporal framework: year, month, day, hour
     year = i[1],
     month = i[2],
     day = c("01", "02", "03", "04", "05", "06", 
@@ -47,17 +51,23 @@ for (i in split(ym, row(ym)))
             "19", "20", "21", "22", "23", "24", 
             "25", "26", "27", "28", "29", "30", "31"),
     time = c("00:00", "06:00", "12:00", "18:00"),
+    # geographical region
+    #      North, West, South, East
     area = c(-10, 30, -27, 41),
+    # output file format
     format = "netcdf.zip",
-    dataset_short_name = "reanalysis-era5-land",
-    target = paste0("landvars_hourly_", i[1], "_", i[2], ".zip"))
+    # output file name
+    target = paste0("landvars_hourly_", i[1], "_", i[2], ".zip")
+  )
   
   # check the validity of a data request and login credentials
   wf_check_request(user=user, request=request)
   
   # download the data request
-  wf_request(user=user, request=request,
-             transfer=TRUE, path=getwd(),
+  wf_request(user=user, 
+             request=request,
+             transfer=TRUE, 
+             path=getwd(),
              verbose=TRUE)
 }
 
@@ -85,7 +95,12 @@ to_df_fun <- function(nc_data)
     vals <- ncvar_get(nc_data, vars[i])
     if (length(dim(vals)) > 3)
     {
-      vals <- vals[, , 2, ]
+      idx_3 <- 
+        apply(vals, MARGIN=3, 
+              function(x){ mean(is.na(x)) } 
+        )
+      which.min(idx_3)
+      vals <- vals[, , idx_3, ]
     }
     dimnames(vals) <- 
       list(longitude=1:length(lon), 
@@ -119,21 +134,25 @@ to_df_fun <- function(nc_data)
 
 # extract and process downloaded land data
 land_data <- list()
-for (i in split(ym, row(ym)))
+for (j in split(ym, row(ym)))
 {
-  dn <- paste0("landvars_hourly_", i[1], "_", i[2])
+  cat(j, ":")
+  dn <- paste0("landvars_hourly_", j[1], "_", j[2])
   # extract downloaded Zip file
   unzip(zipfile=paste0(dn, ".zip"), 
-        exdir=paste0(dn ,"/"))
+        exdir=paste0(dn ,"/"), 
+        overwrite=TRUE)
   
   cds_land_data <- nc_open(paste0(dn, "/data.nc"))
-  print(cds_land_data)
+  #print(cds_land_data)
   
   # dimension axes
   nc.get.dim.axes(cds_land_data)
   
-  land_data[[paste(i, collapse="_")]] <- 
+  land_data[[paste(j, collapse="_")]] <- 
     to_df_fun(cds_land_data)
+  nc_close(cds_land_data )
+  cat(" done\n")
 }
 
 # merge all the years and months 
