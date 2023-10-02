@@ -1,4 +1,3 @@
 # Ghana
 
-
 ## Sampling program
