@@ -439,29 +439,42 @@ aa <-
   # prepare date and time (hour) of collection
   mutate(`Date of collection` = 
            as.Date(`Date of collection`,
-                   format="%d/%m/%y"))
+                   format="%d/%m/%Y"))
 
 bb <- 
   read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Field.xlsx"), 
              sheet="B. dado comportamen_IH_Mandimba",
              range="A1:Z2212", 
              col_names=TRUE,
-             na=c("", "N/A"))
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%Y"))
 
-aa %>% count(`House ID`)
+aa %>% count(`Date of collection`, `House ID`) %>%
+  count(`Date of collection`)
 
 cc <- 
   read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Lab.xlsx"), 
              sheet="B__dados IH_laboratorio",
              range="A1:U722", 
              col_names=TRUE,
-             na=c("", "N/A"))
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%y"))
 dd <- 
   read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Lab.xlsx"), 
              sheet="B__dados IH_laboratorio",
              range="A1:U1303", 
              col_names=TRUE,
-             na=c("", "N/A"))
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%y"))
 
 bind_rows(cc %>% 
             count(Province, District, `House ID`, Longitude, Latitude),
