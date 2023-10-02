@@ -99,7 +99,7 @@ to_df_fun <- function(nc_data)
         apply(vals, MARGIN=3, 
               function(x){ mean(is.na(x)) } 
         )
-      which.min(idx_3)
+      idx_3 <- which.min(idx_3)
       vals <- vals[, , idx_3, ]
     }
     dimnames(vals) <- 
