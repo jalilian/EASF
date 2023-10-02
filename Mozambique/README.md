@@ -8,6 +8,7 @@ The EASF project has been operated across three provinces in Mozambique, which a
 |Zambezia| 105,008 | 16 | 5,110,787 | Gurue and Morrumbala |
 
 The following map shows sampling districts (blue) and locations (red). 
+
 ![Mozambique](/Mozambique/images/Mozambique.png)
 
 ## Sampling program
