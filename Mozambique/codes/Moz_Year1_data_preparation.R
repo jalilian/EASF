@@ -424,3 +424,50 @@ merged_data[["Moamba"]] <-
 
 # save all merged data
 saveRDS(merged_data, file=paste0(data_path, "merged_data.rds"))
+
+
+##########################################
+#########################################
+#########################################
+
+aa <- 
+  read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Field.xlsx"), 
+                          sheet="B. dados comportamen_IH_Cuamba",
+                          range="A1:Z1642", 
+                          col_names=TRUE,
+                          na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%y"))
+
+bb <- 
+  read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Field.xlsx"), 
+             sheet="B. dado comportamen_IH_Mandimba",
+             range="A1:Z2212", 
+             col_names=TRUE,
+             na=c("", "N/A"))
+
+aa %>% count(`House ID`)
+
+cc <- 
+  read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Lab.xlsx"), 
+             sheet="B__dados IH_laboratorio",
+             range="A1:U722", 
+             col_names=TRUE,
+             na=c("", "N/A"))
+dd <- 
+  read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Lab.xlsx"), 
+             sheet="B__dados IH_laboratorio",
+             range="A1:U1303", 
+             col_names=TRUE,
+             na=c("", "N/A"))
+
+bind_rows(cc %>% 
+            count(Province, District, `House ID`, Longitude, Latitude),
+          dd %>% 
+            count(Province, District, `House ID`, Longitude, Latitude)) %>%
+  write_csv(file="~/Desktop/tmp.csv")
+
+
+
