@@ -72,6 +72,11 @@ adaptive_table[["Moamba-Flit"]] <-
          `An. funestus s.l`=`Nr. Total An. funestus sl`)
 
 # Gurue AL-CDC
+all(unique(lab_data$Gurue %>% 
+             pull(`House ID`)) %in% 
+      unique(field_data$Gurue %>% 
+               pull(`House ID`)))
+
 adaptive_table[["Gurue-AL-CDC"]] <-
   field_data$Gurue %>% 
   count(Province, District, `House ID`,
@@ -87,6 +92,11 @@ adaptive_table[["Gurue-AL-CDC"]] <-
   select(-`NA`)
 
 # Morrumbala HLC
+all(unique(lab_data$Morrumbala %>% 
+             pull(`House ID`)) %in% 
+      unique(field_data$Morrumbala %>% 
+               pull(`House ID`)))
+
 adaptive_table[["Morrumbala-HLC"]] <-
   field_data$Morrumbala %>% 
   count(Province, District, `House ID`,
@@ -102,6 +112,11 @@ adaptive_table[["Morrumbala-HLC"]] <-
   select(-`NA`)
 
 # Moamba AL-CDC
+all(unique(lab_data$Moamba %>% 
+             pull(`House ID`)) %in% 
+      unique(field_data$Moamba %>% 
+               pull(`House ID`)))
+
 adaptive_table[["Moamba-AL-CDC"]] <-
   field_data$Moamba %>% 
   count(Province, District, `House ID`,
@@ -118,6 +133,46 @@ adaptive_table[["Moamba-AL-CDC"]] <-
   rename(`An. gambiae s.l`=`An. gabiae s.l`,
          `An. coustani`=`An. coustan`)
 
+# Cuamba HLC
+all(unique(lab_data$Cuamba %>% 
+             pull(`House ID`)) %in% 
+      unique(field_data$Cuamba %>% 
+               pull(`House ID`)))
+
+adaptive_table[["Cuamba-HLC"]] <-
+  field_data$Cuamba %>% 
+  count(Province, District, `House ID`,
+        `Collection date (dd/mm/yyyy)`) %>%
+  rename(`Collection hour`=n) %>%
+  left_join(lab_data$Cuamba %>%
+              count(Province, District, `House ID`,
+                    `Collection date (dd/mm/yyyy)`,
+                    `Species name`))  %>%
+  pivot_wider(names_from=`Species name`, 
+              values_from=n) %>% 
+  replace(is.na(.), 0) %>%
+  select(-`NA`)
+
+
+# Mandimba HLC
+all(unique(lab_data$Mandimba %>% 
+             pull(`House ID`)) %in% 
+      unique(field_data$Mandimba %>% 
+               pull(`House ID`)))
+
+adaptive_table[["Mandimba-HLC"]] <-
+  field_data$Mandimba %>% 
+  count(Province, District, `House ID`,
+        `Collection date (dd/mm/yyyy)`) %>%
+  rename(`Collection hour`=n) %>%
+  left_join(lab_data$Mandimba %>%
+              count(Province, District, `House ID`,
+                    `Collection date (dd/mm/yyyy)`,
+                    `Species name`))  %>%
+  pivot_wider(names_from=`Species name`, 
+              values_from=n) %>% 
+  replace(is.na(.), 0) %>%
+  select(-`NA`)
 # check column names
 colnames(adaptive_table[["Morrumbala-Prokopack"]])
 colnames(adaptive_table[["Moamba-Flit"]])

@@ -51,6 +51,7 @@ if (!all(unlist(required_data_files)))
 
 lab_data <- list()
 
+
 # Gurue lab data
 lab_data[["Gurue"]] <- 
   read_excel(paste0(data_path, "Zambezia/Gurue_HLC_Lab.xlsx"), 
@@ -135,11 +136,99 @@ lab_data[["Moamba"]] <-
          `Comments/Observations`=`Comments/Observation`,
          `Technician name`=Technician)
 
+# Cuamba lab data
+lab_data[["Cuamba"]] <- 
+  read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Lab.xlsx"), 
+             sheet="B__dados IH_laboratorio",
+             range="A1:U722", 
+             col_names=TRUE,
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%Y"), 
+         `Hour of collection` = 
+           case_match(`Hour of collection`,
+                      "24-01" ~ "24-1",
+                      "01-02" ~ "1-2",
+                      "02-03" ~ "2-3",
+                      "03-04" ~ "3-4",
+                      "04-05" ~ "4-5",
+                      "05-06" ~ "5-6",
+                      .default=`Hour of collection`),
+         `Hour of collection` = 
+           factor(`Hour of collection`, 
+                  levels=c("18-19", "19-20", "20-21", "21-22", 
+                           "22-23", "23-24", "24-1", "1-2", 
+                           "2-3", "3-4", "4-5", "5-6"))) %>%
+  # rename columns to have the same variable names for all data
+  rename(`Collection date (dd/mm/yyyy)`=`Date of collection`,
+         `House number`=`House No.`,
+         `Location number`=`Location No.`,
+         `Order number`=`Order No.`,
+         `Mosquito microscopy code`=`Mosquito code`,
+         `Comments/Observations`=`Comments`) %>%
+  select(-c(`Municipality/villa`, `Administrative post`,
+            Locality, Street, 
+            Latitude, Longitude,
+            `Complex/group name`)) %>%
+  # translate Isca humana to HLC
+  mutate(`Collection method`=
+           case_match(`Collection method`,
+                      "IH" ~ "HLC"))
+
+# Mandimba lab data
+lab_data[["Mandimba"]] <- 
+  read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Lab.xlsx"), 
+             sheet="B__dados IH_laboratorio",
+             range="A1:U1303", 
+             col_names=TRUE,
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  mutate(`Collection date` = 
+           as.Date(`Collection date`,
+                   format="%d/%m/%Y"), 
+         `Hour of collection` = 
+           case_match(`Hour of collection`,
+                      "24-01" ~ "24-1",
+                      "01-02" ~ "1-2",
+                      "02-03" ~ "2-3",
+                      "03-04" ~ "3-4",
+                      "04-05" ~ "4-5",
+                      "05-06" ~ "5-6",
+                      .default=`Hour of collection`),
+         `Hour of collection` = 
+           factor(`Hour of collection`, 
+                  levels=c("18-19", "19-20", "20-21", "21-22", 
+                           "22-23", "23-24", "24-1", "1-2", 
+                           "2-3", "3-4", "4-5", "5-6"))) %>%
+  # rename columns to have the same variable names for all data
+  rename(`Collection date (dd/mm/yyyy)`=`Collection date`,
+         `House number`=`House  No.`,
+         `Location number`=`Location No.`,
+         `Collection method`=`Collection Method`,
+         `Order number`=`Order No.`,
+         `Place of collection`=`Position of collection`,
+         `Mosquito microscopy code`=`Mosquito code`,
+         `Technician name`=Technician,
+         `Comments/Observations`=`Comments`) %>%
+  select(-c(`Municiplaity/Village`, `Administrative post`,
+            Locality, Street, 
+            Latitude, Longitude,
+            `Complex group`)) %>%
+  # translate Isca humana to HLC
+  mutate(`Collection method`=
+           case_match(`Collection method`,
+                      "IH" ~ "HLC"))
+
+  
 # check of all lab data frames have the same column names
 all.equal(colnames(lab_data[["Gurue"]]),
-          colnames(lab_data[["Morrumbala"]]),
-          colnames(lab_data[["Moamba"]]))
-
+          colnames(lab_data[["Morrumbala"]]))
+all.equal(colnames(lab_data[["Gurue"]]),
+          colnames(lab_data[["Cuamba"]]))
+all.equal(colnames(lab_data[["Cuamba"]]),
+          colnames(lab_data[["Mandimba"]]))
 # save all lab data
 saveRDS(lab_data, file=paste0(data_path, "lab_data.rds"))
 
@@ -151,6 +240,7 @@ saveRDS(lab_data, file=paste0(data_path, "lab_data.rds"))
 # ---------------------------------------------  
 
 field_data <- list()
+
 # Gurue field data
 field_data[["Gurue"]] <- 
   read_excel(paste0(data_path, "Zambezia/Gurue_HLC_Field.xlsx"), 
@@ -301,6 +391,104 @@ field_data[["Moamba"]] <-
            as.numeric(`number of bednets present in the room where the trap is placed`))
 
 
+# Cuamba field data
+field_data[["Cuamba"]] <- 
+  read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Field.xlsx"), 
+             sheet="B. dados comportamen_IH_Cuamba",
+             range="A1:Z1642", 
+             col_names=TRUE,
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  select(-`Hour of collection...20`) %>%
+  rename(`Hour of collection`=
+           `Hour of collection...11`) %>%
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%Y"),
+         `Hour of collection` = 
+           case_match(`Hour of collection`,
+                      "24-01" ~ "24-1",
+                      "01-02" ~ "1-2",
+                      "02-03" ~ "2-3",
+                      "03-04" ~ "3-4",
+                      "04-05" ~ "4-5",
+                      "05-06" ~ "5-6",
+                      .default=`Hour of collection`),
+         `Hour of collection` = 
+           factor(`Hour of collection`, 
+                  levels=c("18-19", "19-20", "20-21", "21-22", 
+                           "22-23", "23-24", "24-1", "1-2", 
+                           "2-3", "3-4", "4-5", "5-6"))) %>%
+  # rename columns to have the same variable names for all data
+  rename(
+    `Collection date (dd/mm/yyyy)`=`Date of collection`,
+    `House number`=`House No.`,
+    `Location number`=`Location no.`,
+    `Number of people sleeping or awake but under the net (outside the house)`=`Number of people sleeping or awake but under the net (outside the home)`,
+    `Number of people awake but NOT under the net (outside the house)`=`Number of people awake but NOT under the net (away from home)`,
+    `Number of people sleeping or awake but under the net (indoors)`=`Number of people asleep or awake but under the net (indoors)`,
+    `Rain or No`=`Rain or No rain`,
+    `Number of mosquitoes collected indoors`=`Total mosquitoes collected indoors`,
+    `Number of mosquitoes collected outdoors`=`Total mosquitoes collected outdoors`,
+    `Code of volunteer outside the house`=`Volunteer code outdoors`,
+    `Code of volunteer inside the house`=`Volunteer code indoors`,
+    `Name of tehnician`=`Name of technician`,
+    `Comments/Observations`=`Comments`
+  ) %>%
+  # translate Isca humana to HLC
+  mutate(`Collection method`=
+           case_match(`Collection method`,
+                      "IH" ~ "HLC"))
+
+# Mandimba field data
+field_data[["Mandimba"]] <- 
+  read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Field.xlsx"), 
+             sheet="B. dado comportamen_IH_Mandimba",
+             range="A1:Z2212", 
+             col_names=TRUE,
+             na=c("", "N/A")) %>%
+  # prepare date and time (hour) of collection
+  select(-`Hour of collection...20`) %>%
+  rename(`Hour of collection`=
+           `Hour of collection...11`) %>%
+  mutate(`Date of collection` = 
+           as.Date(`Date of collection`,
+                   format="%d/%m/%Y"),
+         `Hour of collection` = 
+           case_match(`Hour of collection`,
+                      "24-01" ~ "24-1",
+                      "01-02" ~ "1-2",
+                      "02-03" ~ "2-3",
+                      "03-04" ~ "3-4",
+                      "04-05" ~ "4-5",
+                      "05-06" ~ "5-6",
+                      .default=`Hour of collection`),
+         `Hour of collection` = 
+           factor(`Hour of collection`, 
+                  levels=c("18-19", "19-20", "20-21", "21-22", 
+                           "22-23", "23-24", "24-1", "1-2", 
+                           "2-3", "3-4", "4-5", "5-6"))) %>%
+  # rename columns to have the same variable names for all data
+  rename(
+    `Collection date (dd/mm/yyyy)`=`Date of collection`,
+    `House number`=`House No.`,
+    `Location number`=`Location No.`,
+#    `Number of people sleeping or awake but under the net (outside the house)`=`Number of people sleeping or awake but under the net (outside the home)`,
+#    `Number of people awake but NOT under the net (outside the house)`=`Number of people awake but NOT under the net (away from home)`,
+#    `Number of people sleeping or awake but under the net (indoors)`=`Number of people asleep or awake but under the net (indoors)`,
+    `Rain or No`=`Rain or no Rain`,
+    `Number of mosquitoes collected indoors`=`Total number of mosquitoes  inside`,
+    `Number of mosquitoes collected outdoors`=`Total number of mosquitoes outside`,
+    `Code of volunteer outside the house`=`Volunteer code outside`,
+    `Code of volunteer inside the house`=`Volunteer code indoors`,
+    `Name of tehnician`=`Technician name`,
+    `Comments/Observations`=`Comments`
+  ) %>%
+  # translate Isca humana to HLC
+  mutate(`Collection method`=
+           case_match(`Collection method`,
+                      "IH" ~ "HLC"))
+
 # differences between column names of field data
 setdiff(colnames(field_data[["Gurue"]]),
         colnames(field_data[["Morrumbala"]]))
@@ -310,6 +498,10 @@ setdiff(colnames(field_data[["Moamba"]]),
         colnames(field_data[["Gurue"]]))
 setdiff(colnames(field_data[["Gurue"]]),
         colnames(field_data[["Moamba"]]))
+setdiff(colnames(field_data[["Gurue"]]),
+        colnames(field_data[["Cuamba"]]))
+setdiff(colnames(field_data[["Cuamba"]]),
+        colnames(field_data[["Mandimba"]]))
 
 # save all field data
 saveRDS(field_data, file=paste0(data_path, "field_data.rds"))
@@ -424,63 +616,4 @@ merged_data[["Moamba"]] <-
 
 # save all merged data
 saveRDS(merged_data, file=paste0(data_path, "merged_data.rds"))
-
-
-##########################################
-#########################################
-#########################################
-
-aa <- 
-  read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Field.xlsx"), 
-                          sheet="B. dados comportamen_IH_Cuamba",
-                          range="A1:Z1642", 
-                          col_names=TRUE,
-                          na=c("", "N/A")) %>%
-  # prepare date and time (hour) of collection
-  mutate(`Date of collection` = 
-           as.Date(`Date of collection`,
-                   format="%d/%m/%Y"))
-
-bb <- 
-  read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Field.xlsx"), 
-             sheet="B. dado comportamen_IH_Mandimba",
-             range="A1:Z2212", 
-             col_names=TRUE,
-             na=c("", "N/A")) %>%
-  # prepare date and time (hour) of collection
-  mutate(`Date of collection` = 
-           as.Date(`Date of collection`,
-                   format="%d/%m/%Y"))
-
-aa %>% count(`Date of collection`, `House ID`) %>%
-  count(`Date of collection`)
-
-cc <- 
-  read_excel(paste0(data_path, "Niassa/Cuamba_HLC_Lab.xlsx"), 
-             sheet="B__dados IH_laboratorio",
-             range="A1:U722", 
-             col_names=TRUE,
-             na=c("", "N/A")) %>%
-  # prepare date and time (hour) of collection
-  mutate(`Date of collection` = 
-           as.Date(`Date of collection`,
-                   format="%d/%m/%y"))
-dd <- 
-  read_excel(paste0(data_path, "Niassa/Mandimba_HLC_Lab.xlsx"), 
-             sheet="B__dados IH_laboratorio",
-             range="A1:U1303", 
-             col_names=TRUE,
-             na=c("", "N/A")) %>%
-  # prepare date and time (hour) of collection
-  mutate(`Date of collection` = 
-           as.Date(`Date of collection`,
-                   format="%d/%m/%y"))
-
-bind_rows(cc %>% 
-            count(Province, District, `House ID`, Longitude, Latitude),
-          dd %>% 
-            count(Province, District, `House ID`, Longitude, Latitude)) %>%
-  write_csv(file="~/Desktop/tmp.csv")
-
-
 
