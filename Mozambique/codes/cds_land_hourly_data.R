@@ -186,7 +186,7 @@ plot_fun <- function(var, year, month)
     coord_quickmap()
 }
 
-plot_fun("tp_mean", "2022", "May")
+plot_fun("tp_mean", "2022", "June")
 plot_fun("swvl1_sd", "2023", "September")
 # ===============================================
 # save land data as an R object of class data.frame
