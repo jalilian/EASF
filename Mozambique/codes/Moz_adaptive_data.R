@@ -205,6 +205,11 @@ adaptive_table %>%
             lat_max=max(Latitude),
             lon_max=max(Longitude))
 
+# =========================================================
+# construct a set of regularly spaced coordinate points, 
+# forming a regular grid, as reference locations for prediction 
+# =========================================================
+
 # generate coordinates of predictive grid points
 adaptive_grid <- 
   bind_rows(
@@ -225,51 +230,64 @@ adaptive_grid <-
   ) %>%
   relocate(Longitude, Latitude, .after=District)
 
-plot(Moz_map)
-points(adaptive_grid$Longitude, 
-       adaptive_grid$Latitude,
-       pch="+", col="red", cex=0.1)
+Moz_map %>% ggplot() +
+  geom_sf() +
+  geom_point(data=adaptive_grid, 
+             aes(x=Longitude, y=Latitude), 
+             size=0.01, alpha=0.5, shape=20, color="red") +
+  geom_point(data=adaptive_table,
+             aes(x=Longitude, y=Latitude), 
+             size=0.01, color="blue")
 
-points(adaptive_table$Longitude,
-       adaptive_table$Latitude,
-       col="blue", cex=0.1)  
-
-dev.copy2pdf(file=paste0(temp_dir, "grid.pdf"), width=7, height=11)
+dev.copy2pdf(file=paste0(temp_dir, "grid.pdf"), 
+             width=7, height=11)
 
 # add time (Year, Month) to predictive grid data
 # by sampling sampling times
-adaptive_grid <-
-  bind_rows(
-    adaptive_grid %>% 
-      filter(District == "Moamba") %>%
-      bind_cols(
-        adaptive_table %>%
-          as_tibble() %>%
-          filter(District == "Moamba") %>%
-          select(Year, Month) %>%
-          slice_sample(n=400, replace=TRUE) 
-      )
-    ,
-    adaptive_grid %>% 
-      filter(District == "Gurue") %>%
-      bind_cols(
-        adaptive_table %>%
-          as_tibble() %>%
-          filter(District == "Gurue") %>%
-          select(Year, Month) %>%
-          slice_sample(n=400, replace=TRUE) 
-      )
-    ,
-    adaptive_grid %>% 
-      filter(District == "Morrumbala") %>%
-      bind_cols(
-        adaptive_table %>%
-          as_tibble() %>%
-          filter(District == "Morrumbala") %>%
-          select(Year, Month) %>%
-          slice_sample(n=400, replace=TRUE) 
-      )
-  )
+
+adaptive_grid <- 
+  adaptive_grid %>%
+  expand_grid(adaptive_table %>% 
+                as_tibble() %>% 
+                distinct(Year, Month))
+
+if (FALSE)
+{
+  # option 2: sample time (Year, Month)
+  adaptive_grid <-
+    bind_rows(
+      adaptive_grid %>% 
+        filter(District == "Moamba") %>%
+        bind_cols(
+          adaptive_table %>%
+            as_tibble() %>%
+            filter(District == "Moamba") %>%
+            select(Year, Month) %>%
+            slice_sample(n=400, replace=TRUE) 
+        )
+      ,
+      adaptive_grid %>% 
+        filter(District == "Gurue") %>%
+        bind_cols(
+          adaptive_table %>%
+            as_tibble() %>%
+            filter(District == "Gurue") %>%
+            select(Year, Month) %>%
+            slice_sample(n=400, replace=TRUE) 
+        )
+      ,
+      adaptive_grid %>% 
+        filter(District == "Morrumbala") %>%
+        bind_cols(
+          adaptive_table %>%
+            as_tibble() %>%
+            filter(District == "Morrumbala") %>%
+            select(Year, Month) %>%
+            slice_sample(n=400, replace=TRUE) 
+        )
+    )
+}
+
 
 # save adaptive grid
 saveRDS(adaptive_grid, 

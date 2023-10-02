@@ -188,9 +188,26 @@ adaptive_grid_covars %>%
   group_by(Province, District) %>%
   select(elevation)
 
-adaptive_grid_covars <-
-  adaptive_grid_covars %>%
-  filter(!is.na(elevation))
+if (FALSE)
+{
+  library("rasterVis")
+  gplot(Moz_strm30) + 
+    geom_tile(aes(fill = value)) + 
+    coord_equal() +
+    geom_point(data=adaptive_grid_covars %>% 
+                 distinct(Longitude, Latitude),
+               aes(x=Longitude, y=Latitude))
+  
+  # remove grid points with missing (NA) elevation
+  adaptive_grid_covars <-
+    adaptive_grid_covars %>%
+    filter(!is.na(elevation))  
+}
+
+# remove grid points with missing (NA) values in any column
+adaptive_grid_covars <- 
+  adaptive_grid_covars %>% 
+  na.omit()
 
 # save the updated data
 saveRDS(adaptive_table_covars, 
