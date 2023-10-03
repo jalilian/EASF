@@ -7,7 +7,7 @@ The EASF project has been operated across three provinces in Mozambique, which a
 |Niassa  | 129,056 | 15 | 1,865,976 | Cuamba and Mandimba |
 |Zambezia| 105,008 | 16 | 5,110,787 | Gurue and Morrumbala |
 
-The following map shows sampling districts (blue) and locations (red). 
+The following map shows sampling provinces (grey), districts (blue) and locations (red). 
 
 ![Mozambique](/Mozambique/images/Mozambique.png)
 
