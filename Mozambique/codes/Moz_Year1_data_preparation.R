@@ -7,26 +7,36 @@ library("readxl")
 data_path <- "~/Downloads/Mozambique/"
 
 # names of the required data files
-required_data_files <- c(
-  # Zambezia province
-  # field data for the Gurue district
-  "Gurue_HLC_Field.xlsx", 
-  # lab data for the Gurue district
-  "Gurue_HLC_Lab.xlsx",   
-  # field data for the Morrumbala district
-  "Morrumbala_CDC_Field.xlsx", 
-  # lab data for the Morrumbala district
-  "Morrumbala_CDC_Lab.xlsx",   
-  # merged (field and lab) data for Prokopack collection in the Morrumbala district
-  "Morrumbala_Prokopack.xlsx", 
-  # Maputo province
-  # field data for CDC collection in the Moamba district
-  "Moamba_CDC_Field.xlsx", 
-  # lab data for CDC collection in the Moamba district
-  "Moamba_CDC_Lab.xlsx",
-  # merged (field and count) data for CDC collection in the Moamba district
-  "Moamba_Flit.xlsx"
-)
+required_data_files <- 
+  c(
+    # Zambezia province
+    # field data for the Gurue district
+    "Gurue_HLC_Field.xlsx", 
+    # lab data for the Gurue district
+    "Gurue_HLC_Lab.xlsx",   
+    # field data for the Morrumbala district
+    "Morrumbala_CDC_Field.xlsx", 
+    # lab data for the Morrumbala district
+    "Morrumbala_CDC_Lab.xlsx",   
+    # merged (field and lab) data for Prokopack collection in the Morrumbala district
+    "Morrumbala_Prokopack.xlsx", 
+    # Maputo province
+    # field data for CDC collection in the Moamba district
+    "Moamba_CDC_Field.xlsx", 
+    # lab data for CDC collection in the Moamba district
+    "Moamba_CDC_Lab.xlsx",
+    # merged (field and count) data for CDC collection in the Moamba district
+    "Moamba_Flit.xlsx",
+    # Niassa province
+    # field data for CDC collection in the Cuamba district
+    "Cuamba_HLC_Field.xlsx", 
+    # lab data for CDC collection in the Cuamba district
+    "Cuamba_HLC_Lab.xlsx",
+    # field data for CDC collection in the Mandimba district
+    "Mandimba_HLC_Field.xlsx", 
+    # lab data for CDC collection in the Mandimba district
+    "Mandimba_HLC_Lab.xlsx"
+  )
 
 required_data_files <- 
   lapply(required_data_files, 
@@ -161,6 +171,12 @@ lab_data[["Cuamba"]] <-
                   levels=c("18-19", "19-20", "20-21", "21-22", 
                            "22-23", "23-24", "24-1", "1-2", 
                            "2-3", "3-4", "4-5", "5-6"))) %>%
+  # make all letters in House ID upper case
+  mutate(`House ID`=toupper(`House ID`)) %>%
+  # make spelling of Niassa province consistent with Mandimba data file
+  mutate(Province=case_match(Province,
+                             "Níassa" ~ "Niassa",
+                             .default=Province)) %>%
   # rename columns to have the same variable names for all data
   rename(`Collection date (dd/mm/yyyy)`=`Date of collection`,
          `House number`=`House No.`,
@@ -175,7 +191,21 @@ lab_data[["Cuamba"]] <-
   # translate Isca humana to HLC
   mutate(`Collection method`=
            case_match(`Collection method`,
-                      "IH" ~ "HLC"))
+                      "IH" ~ "HLC")) %>%
+  # make mosquitoes species name consistent with other data files
+  mutate(`Species name`=
+           str_replace(`Species name`, 
+                       "Anopheles", 
+                       "An."))
+if (FALSE)
+{
+  lab_data$Cuamba %>% 
+    count(Province, District, `House ID`, Longitude, Latitude) %>%
+    group_by(Province, District, `House ID`) %>%
+    summarise(Longitude=mean(as.numeric(Longitude)),
+              Latitude=mean(as.numeric(Latitude))) %>%
+    write_csv(file="~/Desktop/Cuamba.csv")
+}
 
 # Mandimba lab data
 lab_data[["Mandimba"]] <- 
@@ -219,9 +249,28 @@ lab_data[["Mandimba"]] <-
   # translate Isca humana to HLC
   mutate(`Collection method`=
            case_match(`Collection method`,
-                      "IH" ~ "HLC"))
+                      "IH" ~ "HLC")) %>%
+  # make mosquitoes species name consistent with other data files
+  mutate(`Species name`=
+           str_replace(`Species name`, 
+                       "Anopheles", 
+                       "An."),
+         `Species name`=
+           case_match(`Species name`,
+                      "An. Squamosus" ~ "An. squamosus",
+                      "An. gambiae  s.l" ~ "An. gambiae s.l",
+                      .default=`Species name`))
 
-  
+if (FALSE)
+{
+  lab_data$Mandimba %>% 
+    count(Province, District, `House ID`, Longitude, Latitude) %>%
+    group_by(Province, District, `House ID`) %>%
+    summarise(Longitude=mean(as.numeric(Longitude)),
+              Latitude=mean(as.numeric(Latitude))) %>%
+    write_csv(file="~/Desktop/Mandimba.csv")
+}
+
 # check of all lab data frames have the same column names
 all.equal(colnames(lab_data[["Gurue"]]),
           colnames(lab_data[["Morrumbala"]]))

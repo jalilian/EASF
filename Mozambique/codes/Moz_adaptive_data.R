@@ -153,7 +153,6 @@ adaptive_table[["Cuamba-HLC"]] <-
   replace(is.na(.), 0) %>%
   select(-`NA`)
 
-
 # Mandimba HLC
 all(unique(lab_data$Mandimba %>% 
              pull(`House ID`)) %in% 
@@ -173,12 +172,15 @@ adaptive_table[["Mandimba-HLC"]] <-
               values_from=n) %>% 
   replace(is.na(.), 0) %>%
   select(-`NA`)
+
 # check column names
 colnames(adaptive_table[["Morrumbala-Prokopack"]])
 colnames(adaptive_table[["Moamba-Flit"]])
 colnames(adaptive_table[["Gurue-AL-CDC"]])
 colnames(adaptive_table[["Morrumbala-HLC"]])
 colnames(adaptive_table[["Moamba-AL-CDC"]])
+colnames(adaptive_table[["Cuamba-HLC"]])
+colnames(adaptive_table[["Mandimba-HLC"]])
 
 # marge
 adaptive_table <- 
@@ -228,6 +230,7 @@ download.file(
 # extract the shapefile
 unzip(zipfile=paste0(temp_dir, "Moz_map.zip"), 
       exdir=temp_dir)
+
 # read the shapefile
 library("sf")
 Moz_map <-
