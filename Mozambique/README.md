@@ -44,7 +44,8 @@ The land cover type of sampling locations is as follows:
 | ---- | ---------- | ----- | ----- |
 Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 1 <br> Vegetation aquatic or regularly flooded 2 <br> Built-up areas 10 |
 |Maputo  | Moamba | Flit | Shrubs cover areas 1 <br> Grassland 2 <br>  Cropland 2 <br> Vegetation aquatic or regularly flooded 4 <br> Built-up areas 3|
-|Niassa| | | |
+|Niassa  | Cuamba   | HLC | Shrubs cover areas 2 <br> Cropland 1 <br> Built-up areas 6 |
+|Niassa  | Mandimba | HLC | Shrubs cover areas 1 <br> Grassland 3 <br> Cropland 7 <br> Built-up areas 1 |
 |Zambezia| Gurue | HLC |  Grassland 1 <br> Cropland 10 <br> Built-up areas 1|
 |Zambezia| Morrumbala | AL-CDC | Cropland 12 |
 |Zambezia| Morrumbala | Prokopack | Cropland 12 |
