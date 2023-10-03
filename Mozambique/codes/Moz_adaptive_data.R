@@ -184,7 +184,7 @@ colnames(adaptive_table[["Mandimba-HLC"]])
 
 # marge
 adaptive_table <- 
-  adaptive_table %>% reduce(full_join)
+  adaptive_table %>% reduce(full_join) %>% as_tibble()
 
 # =========================================================
 # reading coordinates of the collection houses
@@ -212,7 +212,8 @@ adaptive_table <-
   summarise(across(c(`Collection hour`, 
                      `Collection time`,
                      starts_with("An. ")), 
-                   ~sum(.x ,na.rm=TRUE)))
+                   ~sum(.x ,na.rm=TRUE))) %>% 
+  as_tibble()
 
 # save adaptive table
 saveRDS(adaptive_table, 
@@ -244,14 +245,16 @@ Moz_map %>%
                    ), fill="grey50") +
   geom_sf(data=Moz_map %>%
             filter(NAME_2 %in% 
-                     c("Moamba", "Gurue", "Morrumbala")
+                     c("Moamba", "Gurue", "Morrumbala", "Cuamba")
             ), fill="blue") +
+  geom_sf(data=Moz_map %>%
+            filter(NAME_3 %in% 
+                     c("Mandimba-Sede")
+                   ), fill="blue") +
   geom_point(data=adaptive_table %>%
                distinct(Longitude, Latitude),
              aes(x=Longitude, y=Latitude),
              col="red", shape=2, size=0.5)
-
-
 
 # check coordinates of sampling sites
 adaptive_table %>%
@@ -284,7 +287,15 @@ adaptive_grid <-
     # grid points for the Morrumbala district
     expand_grid(Longitude=seq(35.4, 35.7, length=20),
                 Latitude=seq(-17.5, -17.2, length=20)) %>%
-      mutate(Province="Zambezia", District="Morrumbala")
+      mutate(Province="Zambezia", District="Morrumbala"),
+    # grid points for the Cuamba district
+    expand_grid(Longitude=seq(36.4, 36.7, length=20),
+                Latitude=seq(-14.9, -14.6, length=20)) %>%
+      mutate(Province="Niassa", District="Cuamba"),
+    # grid points for the Mandimba district
+    expand_grid(Longitude=seq(35.6, 35.9, length=20),
+                Latitude=seq(-14.4, -14.1, length=20)) %>%
+      mutate(Province="Niassa", District="Mandimba")
   ) %>%
   relocate(Longitude, Latitude, .after=District)
 

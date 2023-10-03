@@ -170,23 +170,23 @@ adaptive_grid_covars <-
 adaptive_table_covars %>%
   distinct(`House ID`, .keep_all=TRUE) %>%
   group_by(Province, District, `Collection method`) %>%
-  count(land_cover)
+  count(land_cover) %>% print(n=100)
 
 adaptive_grid_covars %>%
   distinct(Longitude, Latitude, .keep_all=TRUE) %>%
   group_by(Province, District) %>%
-  count(land_cover)
+  count(land_cover) %>% print(n=100)
 
 # check elevation
 adaptive_table_covars %>%
   distinct(`House ID`, .keep_all=TRUE) %>%
   group_by(Province, District, `Collection method`) %>%
-  select(elevation)
+  select(elevation) %>% print(n=100)
 
 adaptive_grid_covars %>%
   distinct(Longitude, Latitude, .keep_all=TRUE) %>%
   group_by(Province, District) %>%
-  select(elevation)
+  select(elevation) %>% print(n=100)
 
 if (FALSE)
 {
@@ -204,10 +204,14 @@ if (FALSE)
     filter(!is.na(elevation))  
 }
 
-# remove grid points with missing (NA) values in any column
-adaptive_grid_covars <- 
-  adaptive_grid_covars %>% 
-  na.omit()
+if (FALSE)
+{
+  # remove grid points with missing (NA) values in any column
+  adaptive_grid_covars <- 
+    adaptive_grid_covars %>% 
+    na.omit()
+}
+
 
 # save the updated data
 saveRDS(adaptive_table_covars, 
