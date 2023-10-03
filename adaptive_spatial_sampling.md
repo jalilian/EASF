@@ -46,3 +46,4 @@ Books
 - Mateu, J., & Müller, W. G. (Eds.). (2012). [Spatio-temporal design: Advances in efficient data acquisition](https://www.wiley.com/en-gb/Spatio+temporal+Design%3A+Advances+in+Efficient+Data+Acquisition-p-9781118441886). John Wiley & Sons.
 
 Papers
+- Monteiro, G. M., Djogbenou, L. S., Donnelly, M. J., & Sedda, L. (2023). Development and deployment of improved Anopheles gambiae sl field surveillance by adaptive spatial sampling design. [bioRxiv, 2023-06](https://doi.org/10.1101/2023.06.16.545360).
