@@ -40,15 +40,15 @@ land_data <- readRDS(url("https://github.com/jalilian/EASF/raw/main/Mozambique/c
 The [S2 Prototype Land Cover 20m Map of Africa 2016](https://2016africalandcover20m.esrin.esa.int/) data are used for extracting land cover type of the sampling locations. This data is provided to the public by the ESA Climate Change Initiative and its Land Cover project as the source of the CCI-LC database.
 
 The land cover type of sampling locations is as follows:
-|Province|District| Collection Method|Land cover type of sampling locations |
-| ---- | ---------- | ----- | ----- |
-Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 1 <br> Vegetation aquatic or regularly flooded 2 <br> Built-up areas 10 |
-|Maputo  | Moamba | Flit | Shrubs cover areas 1 <br> Grassland 2 <br>  Cropland 2 <br> Vegetation aquatic or regularly flooded 4 <br> Built-up areas 3|
-|Niassa  | Cuamba   | HLC | Shrubs cover areas 2 <br> Cropland 1 <br> Built-up areas 6 |
-|Niassa  | Mandimba | HLC | Shrubs cover areas 1 <br> Grassland 3 <br> Cropland 7 <br> Built-up areas 1 |
-|Zambezia| Gurue | HLC |  Grassland 1 <br> Cropland 10 <br> Built-up areas 1|
-|Zambezia| Morrumbala | AL-CDC | Cropland 12 |
-|Zambezia| Morrumbala | Prokopack | Cropland 12 |
+|Province|District| Collection Method|Land cover type of sampling locations | Mean elevation |
+| ---- | ---------- | ----- | ----- | ----- |
+Maputo  | Moamba | AL-CDC | Shrubs cover areas 2 <br> Grassland 3 <br> Cropland 1 <br> Vegetation aquatic or regularly flooded 2 <br> Built-up areas 10 | 122 |
+|Maputo  | Moamba | Flit | Shrubs cover areas 1 <br> Grassland 2 <br>  Cropland 2 <br> Vegetation aquatic or regularly flooded 4 <br> Built-up areas 3 | 119 |
+|Niassa  | Cuamba   | HLC | Shrubs cover areas 2 <br> Cropland 1 <br> Built-up areas 6 | 756 |
+|Niassa  | Mandimba | HLC | Shrubs cover areas 1 <br> Grassland 3 <br> Cropland 7 <br> Built-up areas 1 | 754 |
+|Zambezia| Gurue | HLC |  Grassland 1 <br> Cropland 10 <br> Built-up areas 1| 728 |
+|Zambezia| Morrumbala | AL-CDC | Cropland 12 | 421 |
+|Zambezia| Morrumbala | Prokopack | Cropland 12 | 422 |
 
 ### Elevation
 Elevation data are extracted from the digital elevation model (DEM) provided by [Shuttle Radar Topography Mission (SRTM)](https://www.usgs.gov/centers/eros/science/usgs-eros-archive-digital-elevation-shuttle-radar-topography-mission-srtm-1?qt-science_center_objects=0#qt-science_center_objects) with 1 arc second (30 meter) resolution.
