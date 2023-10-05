@@ -45,7 +45,7 @@ Books
 - Müller, W. G. (2007). [Collecting spatial data: optimum design of experiments for random fields](https://doi.org/10.1007/978-3-540-31175-1). Springer Science & Business Media.
 - Mateu, J., & Müller, W. G. (Eds.). (2012). [Spatio-temporal design: Advances in efficient data acquisition](https://www.wiley.com/en-gb/Spatio+temporal+Design%3A+Advances+in+Efficient+Data+Acquisition-p-9781118441886). John Wiley & Sons.
 - Diggle, P. J., & Giorgi, E. (2019). [Model-based geostatistics for global public health: methods and applications](https://doi.org/10.1201/9781315188492 ). CRC Press. Chapter 6: Geostatistical design and Chapter 7: Preferential sampling.  
-
+- Khormi, H. M., & Kumar, L. (2015). [Modelling interactions between vector-borne diseases and environment using GIS](https://www.routledge.com/Modelling-Interactions-Between-Vector-Borne-Diseases-and-Environment-Using/Khormi-Kumar/p/book/9781138597235). CRC press.
 
 Papers
 - Monteiro, G. M., Djogbenou, L. S., Donnelly, M. J., & Sedda, L. (2023). Development and deployment of improved Anopheles gambiae sl field surveillance by adaptive spatial sampling design. [bioRxiv, 2023-06](https://doi.org/10.1101/2023.06.16.545360).
