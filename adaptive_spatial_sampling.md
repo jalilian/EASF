@@ -44,7 +44,7 @@ Books
 - Gruijter, J. J., Bierkens, M. F., Brus, D. J., & Knotters, M. (2006). [Sampling for natural resource monitoring](https://doi.org/10.1007/3-540-33161-1). Springer-Verlag Berlin Heidelberg.
 - Müller, W. G. (2007). [Collecting spatial data: optimum design of experiments for random fields](https://doi.org/10.1007/978-3-540-31175-1). Springer Science & Business Media.
 - Mateu, J., & Müller, W. G. (Eds.). (2012). [Spatio-temporal design: Advances in efficient data acquisition](https://www.wiley.com/en-gb/Spatio+temporal+Design%3A+Advances+in+Efficient+Data+Acquisition-p-9781118441886). John Wiley & Sons.
-- Diggle, P. J., & Giorgi, E. (2019). [Model-based geostatistics for global public health: methods and applications](https://doi.org/10.1201/9781315188492 ). CRC Press.
+- Diggle, P. J., & Giorgi, E. (2019). [Model-based geostatistics for global public health: methods and applications](https://doi.org/10.1201/9781315188492 ). CRC Press. Chapter 6: Geostatistical design and Chapter 7: Preferential sampling.  
 
 
 Papers
