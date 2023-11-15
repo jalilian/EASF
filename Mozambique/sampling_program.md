@@ -1,6 +1,8 @@
 
-## ESAF sampling program
+# ESAF sampling program
 The sampling plan so far has been executed according to the following table:
+
+## Year 1 sampling program
 
 | Province | District | Collection Method | Number of sampling locations | Sampling dates (number of locations)|
 | ---- | ---------- | ----- |  ----- | ---- | 
@@ -11,3 +13,9 @@ The sampling plan so far has been executed according to the following table:
 |Zambezia| Gurue | HLC | 12: <br> "ZGuL14IHC001" <br> "ZGuL14IHC002" <br> "ZGuL14IHC003" <br> "ZGuL15IHC001" <br> "ZGuL15IHC002" <br> "ZGuL15IHC003" <br> "ZGuL16IHC001" <br> "ZGuL16IHC002" <br> "ZGuL16IHC003" <br> "ZGuL19IHC001" <br> "ZGuL19IHC002" <br> "ZGuL19IHC003" |  2022-09-17  (3), 2022-09-18  (6), 2022-09-19  (6), 2022-09-20 (3) <br> 2022-10-17  (9), 2022-10-18   (12), 2022-10-19  (3)  <br>2022-11-04 (12), 2022-11-05   (12) <br> 2023-01-06   (12), 2023-01-07   (12) <br>2023-02-01 (12), 2023-02-02   (12) <br> 2023-03-05   (12), 2023-03-06   (12) <br>2023-04-04 (12), 2023-04-05   (12) <br> 2023-05-14   (12), 2023-05-15   (12) <br>2023-06-20 (12), 2023-06-21   (12) <br> 2023-07-06   (12), 2023-07-07   (12) <br>2023-08-01 (12), 2023-08-02   (12) |
 |Zambezia| Morrumbala | AL-CDC | 12: <br> "ZMOL11CDCC001" <br> "ZMOL11CDCC002" <br> "ZMOL11CDCC003" <br> "ZMOL22CDCC001" <br> "ZMOL22CDCC002" <br> "ZMOL22CDCC003" <br> "ZMOL3CDCC001"  <br> "ZMOL3CDCC002"  <br> "ZMOL3CDCC003" <br> "ZMOL8CDCC001"  <br> "ZMOL8CDCC002" <br> "ZMOL8CDCC003" |  2022-10-17  (12),  2022-10-18  (12),  2022-10-19  (12) <br>  2022-11-14  (12),  2022-11-15  (12),  2022-11-16  (12) <br>  2023-01-14  (12),  2023-01-15  (12),  2023-01-16  (12) <br>  2023-02-05  (12),  2023-02-06  (12),  2023-02-07  (12) <br>  2023-03-07  (12),  2023-03-08  (12),  2023-03-09  (12) <br>  2023-04-10  (12),  2023-04-11  (12),  2023-04-12  (12) <br>  2023-05-03  (12),  2023-05-04  (12),  2023-05-05  (12) <br>  2023-06-19  (12),  2023-06-20  (12),  2023-06-21  (12) <br>  2023-07-06  (12),  2023-07-07  (12),  2023-07-08  (12)  <br>  2023-08-01  (12),  2023-08-02  (12),  2023-08-03  (12)   |
 |Zambezia| Morrumbala | Prokopack | 12: <br> "ZMOL11PKC001" <br> "ZMOL11PKC002" <br> "ZMOL11PKC003" <br> "ZMOL22PKC001" <br> "ZMOL22PKC002" <br> "ZMOL22PKC003" <br> "ZMOL3PKC001"  <br> "ZMOL3PKC002"  <br> "ZMOL3PKC003"  <br> "ZMOL8PKC001"  <br> "ZMOL8PKC002"  <br> "ZMOL8PKC003"  | 2022-10-20 (12) <br> 2022-11-15 (12) <br>  2023-01-14 (3),  2023-01-15 (6),  2023-01-16 (3) <br>  2023-02-06 (3),  2023-02-07 (9) <br>  2023-03-08 (12) <br>  2023-04-11 (9),  2023-04-12 (3) <br>  2023-05-03 (3),  2023-05-04 (9) <br>  2023-06-19 (1),  2023-06-20 (8),  2023-06-22 (3) <br>  2023-07-07 (3),  2023-07-08 (6),  2023-07-09 (3) <br>  2023-08-02 (12) |
+
+## Year 2 sampling program
+
+| Province | District | Collection Method | Number of sampling locations | Sampling dates (number of locations)|
+| ---- | ---------- | ----- |  ----- | ---- | 
+||
