@@ -1,6 +1,6 @@
 
 # ESAF sampling program
-The sampling plan so far has been executed according to the following table:
+The sampling plan so far has been executed according to the following tables:
 
 ## Year 1 sampling program
 
@@ -18,4 +18,6 @@ The sampling plan so far has been executed according to the following table:
 
 | Province | District | Collection Method | Number of sampling locations | Sampling dates (number of locations)|
 | ---- | ---------- | ----- |  ----- | ---- | 
-||
+|Niassa| Mandimba | IHC | 12: <br> "NMA15IHC001" <br> "NMA15IHC002" <br> "NMA15IHC003" <br> "NMA18IHC001" <br> "NMA18IHC002" <br> "NMA18IHC003" <br>
+ "NMA19IHC001" <br> "NMA19IHC002" <br> "NMA19IHC003" <br> "NMA20IHC001" <br> "NMA20IHC002" <br> "NMA20IHC003" | 2023-11-10, 2023-11-11, 2023-11-14 |
+|Niassa| Mandimba | Flit | 
