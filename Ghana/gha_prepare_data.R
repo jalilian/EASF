@@ -72,8 +72,22 @@ tmp <- gha_data %>%
         "Total Collected: Anopheles Male",
         "Total Collected: Culicine Male")
   ) %>%
-  mutate(value=ifelse(is.numeric(value), value,  
-                      str_remove_all(str_to_upper(value), " ")))
+  mutate(value=str_remove_all(str_to_upper(value), " "),
+         value=str_replace_all(value, "/", "-")) %>%
+  mutate(value=case_match(value,
+                          "KARHLC-03" ~ "KAR-HLC-03",
+                          "KLI-HLC01" ~ "KLI-HLC-01",
+                          "ODC-HLC-05" ~ "ODU-HLC-05",
+                          "0KU-HLC-02" ~ "OKU-HLC-02",
+                          "D0B-PSC-09" ~ "DOB-PSC-09",
+                          "DOB=PSC-11" ~ "DOB-PSC-11",
+                          "KAR-PSC05" ~ "KAR-PSC-05",
+                          "KAR-PSC18" ~ "KAR-PSC-18",
+                          "KARPSC-11" ~ "KAR-PSC-11",
+                          "ODU-PSC-001" ~ "ODU-PSC-01",
+                          "0KU-PSC-03" ~ "OKU-PSC-03",
+                          "0KU-PSC-06" ~ "0KU-PSC-06",
+                          .default=value))
 
   pivot_wider(names_from=`Datat element name`,
               values_from=value)
