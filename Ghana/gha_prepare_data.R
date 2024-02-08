@@ -30,8 +30,9 @@ gha_data %>% count(orgUnit, `Org unit name`)
 
 ## house ID
 gha_data %>% 
+  group_by(`Org unit name`) %>%
   filter(`Datat element name` == "HH Number") %>%
-  count(value)
+  count(value) %>% print(n=500)
 
 gha_data %>% count(`Org unit name`, eventDate) %>%
   print(n=500)
