@@ -32,6 +32,7 @@ gha_data %>% count(orgUnit, `Org unit name`)
 gha_data %>% 
   group_by(`Org unit name`) %>%
   filter(`Datat element name` == "HH Number") %>%
+  filter(str_detect(value, "HLC|hlc")) %>%
   count(value) %>% print(n=500)
 
 gha_data %>% count(`Org unit name`, eventDate) %>%
@@ -58,5 +59,21 @@ gha_data %>%
 gha_data %>% 
   filter(`Org unit name` == "Glitame EASF Site") %>%
   filter(`Datat element name` == "Total Collected: Anopheles Female") %>%
-  select(`Datat element name`, value,)
+  select(`Datat element name`, value,) %>%
   count(value)
+
+tmp <- gha_data %>% 
+  select(`Org unit name`, eventDate,
+         `Datat element name`, value) %>%
+  filter(
+    `Datat element name` %in% 
+      c("HH Number", 
+        "Total Collected: Anopheles Female",
+        "Total Collected: Anopheles Male",
+        "Total Collected: Culicine Male")
+  ) %>%
+  mutate(value=ifelse(is.numeric(value), value,  
+                      str_remove_all(str_to_upper(value), " ")))
+
+  pivot_wider(names_from=`Datat element name`,
+              values_from=value)
