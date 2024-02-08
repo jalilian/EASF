@@ -130,8 +130,8 @@ adaptive_table[["Moamba-AL-CDC"]] <-
               values_from=n) %>% 
   replace(is.na(.), 0) %>%
   select(-`NA`) %>%
-  rename(`An. gambiae s.l`=`An. gabiae s.l`,
-         `An. coustani`=`An. coustan`)
+  rename(`An. gambiae s.l`=`Total of An. gambiae sl`,
+         `An. funestus s.l`=`An. funestus sl`)
 
 # Cuamba HLC
 all(unique(lab_data$Cuamba %>% 

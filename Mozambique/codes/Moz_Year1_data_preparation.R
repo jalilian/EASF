@@ -308,7 +308,7 @@ field_data[["Gurue"]] <-
                            "2-3", "3-4", "4-5", "5-6"))) %>%
   # rename columns to have the same variable names for all data
   rename(`House number`=`House No`,
-         `Type of roof`=`Type of room`,
+         #`Type of roof`=`Type of room`,
          `Number of compartment/rooms in the house`=`Number of rooms in the house`,
          `Number of people slept in the room with the trap`=`Number of people slept in the room where trap is placed`,
          `Animals present inside the house`=`Animal present inside the house`,
