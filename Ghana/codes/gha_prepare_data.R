@@ -122,8 +122,10 @@ myfun <- function(x)
 }
 
 gha_hlc <- gha_hlc %>%
+  group_by(`Org unit name`, eventDate) %>%
   mutate(nn=as.numeric(value),
-         mm=myfun(nn))
+         mm=myfun(nn)) %>%
+  ungroup()
 
 gha_hlc <- gha_hlc %>% 
   filter(!is.na(mm)) %>%
@@ -138,8 +140,10 @@ gha_hlc %>%
 
 
 gha_psc <- gha_psc %>%
+  group_by(`Org unit name`, eventDate) %>%
   mutate(nn=as.numeric(value),
-         mm=myfun(nn))
+         mm=myfun(nn)) %>%
+  ungroup()
 
 gha_psc <- gha_psc %>% 
   filter(!is.na(mm)) %>%
@@ -149,6 +153,9 @@ gha_psc <- gha_psc %>%
   mutate(year=year(eventDate), month=month(eventDate)) %>%
   relocate(year, month, .after=eventDate)
 
+gha_psc %>%
+  print(n=900)
+
 gha_psc %>% write_csv(file="~/Downloads/Ghana/gha_psc.csv")
 
 # =========================================================
@@ -156,6 +163,11 @@ gha_coords <- read_csv("~/Downloads/Ghana/gha_coords.csv")
 
 gha_coords <- gha_coords %>%
   mutate(`house ID`=str_remove_all(str_to_upper(`house ID`), " "))
+
+gha_hlc <- gha_hlc %>% 
+  group_by(year, month, `House ID`) %>%
+  summarise(`Number of An.` = sum(`Number of An.`)) %>%
+  ungroup()
 
 gha_hlc <- gha_hlc %>%
   left_join(
@@ -177,36 +189,71 @@ gha_hlc %>% filter(str_detect(`House ID`, "OKU")) %>%
   summarise(summary(long), summary(lat))
 
 gha_grid <- bind_rows(
-  expand_grid(long=seq(-3.081485, -3.078780, l=10),
-              lat=seq(6.081045, 6.082955, l=10)) %>%
+  expand_grid(long=seq(-3.085, -3.075, l=10),
+              lat=seq(6.078, 6.088, l=10)) %>%
     mutate(unit="Antokrom"),
-  expand_grid(long=seq(-3.041285, -3.027480, l=10),
-              lat=seq(6.108965, 6.126165, l=10)) %>%
+  expand_grid(long=seq(-3.042, -3.027, l=10),
+              lat=seq(6.108, 6.126, l=10)) %>%
     mutate(unit="Dadeiso"),
-  expand_grid(long=seq(-0.3557335, -0.3547665, l=10),
-              lat=seq(5.701030, 5.705005, l=10)) %>%
+  expand_grid(long=seq(-0.360, -0.350, l=10),
+              lat=seq(5.698, 5.708, l=10)) %>%
     mutate(unit="Doblo Gono"),
-  expand_grid(long=seq(1.18324, 1.195920, l=10),
-              lat=seq(6.146345, 6.159955, l=10)) %>%
+  expand_grid(long=seq(1.183, 1.195, l=10),
+              lat=seq(6.146, 6.160, l=10)) %>%
     mutate(unit="Duta"),
-  expand_grid(long=seq(1.019020, 1.023655, l=10),
-              lat=seq(6.105100, 6.107910, l=10)) %>%
+  expand_grid(long=seq(1.017, 1.027, l=10),
+              lat=seq(6.102, 6.112, l=10)) %>%
     mutate(unit="Glitame"),
-  expand_grid(long=seq(-3.002740, -2.997475, l=10),
-              lat=seq(6.132915, 6.137980, l=10)) %>%
+  expand_grid(long=seq(-3.005, -2.995, l=10),
+              lat=seq(6.130, 6.140, l=10)) %>%
     mutate(unit="Karlo"),
-  expand_grid(long=seq(1.027475, 1.033130, l=10),
-              lat=seq(6.076275, 6.079525, l=10)) %>%
+  expand_grid(long=seq(1.025, 1.035, l=10),
+              lat=seq(6.073, 6.083, l=10)) %>%
     mutate(unit="Klikor"),
-  expand_grid(long=seq(-3.107720, -3.104020, l=10),
-              lat=seq(6.193100, 6.198035, l=10)) %>%
+  expand_grid(long=seq(-3.111, -3.101, l=10),
+              lat=seq(6.190, 6.200, l=10)) %>%
     mutate(unit="Kwasuo"),
-  expand_grid(long=seq(-0.3328700, -0.3306500, l=10),
-              lat=seq(5.644430, 5.650500, l=10)) %>%
+  expand_grid(long=seq(-0.336, -0.326, l=10),
+              lat=seq(5.642, 5.652, l=10)) %>%
     mutate(unit="Oduman"),
-  expand_grid(long=seq(-0.3870000, -0.3848400, l=10),
-              lat=seq(5.697255, 5.700525, l=10)) %>%
+  expand_grid(long=seq(-0.390, -0.380, l=10),
+              lat=seq(5.695, 5.705, l=10)) %>%
     mutate(unit="Okushibiade")
 )
 
+gha_grid %>%
+  st_as_sf(., coords=c("long", "lat"), crs="WGS84") %>%
+  mapview()
 
+source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_land_covars_africa.R")
+
+covars <- get_covars(gha_hlc %>% select(long, lat) %>% as.matrix(),
+           path="~/Downloads/Africa_covars/")
+names(covars) <- c("land_cover", "pop_density", "elevation")
+gha_hlc <- bind_cols(gha_hlc, covars)
+
+covars <- get_covars(gha_grid %>% select(long, lat) %>% as.matrix(),
+                     path="~/Downloads/Africa_covars/")
+names(covars) <- c("land_cover", "pop_density", "elevation")
+gha_grid <- bind_cols(gha_grid, covars)
+
+source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_Copernicus_climate_data.R")
+
+user <- "****************"
+cds.key <- "********************************"
+
+covars <- get_cds(user, cds.key, 
+                  year=2023, month=sprintf("%02d", 4:12), 
+                  what=cbind(gha_grid$long, gha_grid$lat))
+
+covars <- covars %>%
+  mutate(time=as.Date(as.POSIXct(time)),
+         year=year(time), month=month(time))
+
+covars %>% 
+  group_by(longitude, latitude, year, month) %>%
+  summarise(across(c(u10:swvl1), mean, na.rm=TRUE))
+
+covars <- get_cds(user, cds.key, 
+                  year=2023, month=sprintf("%02d", 5:12), 
+                  what=cbind(gha_hlc$long, gha_hlc$lat))
