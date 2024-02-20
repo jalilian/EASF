@@ -252,7 +252,7 @@ covars <- covars %>%
 
 covars %>% 
   group_by(longitude, latitude, year, month) %>%
-  summarise(across(c(u10:swvl1), mean, na.rm=TRUE))
+  summarise(across(u10:swvl1, \(x) mean(x, na.rm=TRUE)))
 
 covars <- get_cds(user, cds.key, 
                   year=2023, month=sprintf("%02d", 5:12), 
