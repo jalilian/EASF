@@ -237,6 +237,9 @@ covars <- get_covars(gha_grid %>% select(long, lat) %>% as.matrix(),
 names(covars) <- c("land_cover", "pop_density", "elevation")
 gha_grid <- bind_cols(gha_grid, covars)
 
+# =========================================================
+# Copernicus climate data
+
 source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_Copernicus_climate_data.R")
 
 user <- "****************"
