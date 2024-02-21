@@ -246,14 +246,93 @@ covars <- get_cds(user, cds.key,
                   year=2023, month=sprintf("%02d", 4:12), 
                   what=cbind(gha_grid$long, gha_grid$lat))
 
-covars <- covars %>%
-  mutate(time=as.Date(as.POSIXct(time)),
-         year=year(time), month=month(time))
+covars0 <- get_cds(user, cds.key, 
+                  year=2022, month=12, 
+                  what=cbind(gha_grid$long, gha_grid$lat))
 
-covars %>% 
-  group_by(longitude, latitude, year, month) %>%
-  summarise(across(u10:swvl1, \(x) mean(x, na.rm=TRUE)))
+collapfun <- function(dat)
+{
+  dat %>%
+    mutate(time=as.Date(as.POSIXct(time)),
+           year=year(time), month=month(time)) %>% 
+    group_by(longitude, latitude, year, month) %>%
+    summarise(across(u10:swvl1, list(mean=\(x) mean(x, na.rm=TRUE),
+                                     sd=\(x) sd(x, na.rm=TRUE),
+                                     min=\(x) min(x, na.rm=TRUE),
+                                     max=\(x) max(x, na.rm=TRUE)),
+                     .names="{.col}_{.fn}")) %>%
+    ungroup()
+}
 
+covars <- collapfun(covars) 
+covars0 <- collapfun(covars0)
+covars <- bind_rows(covars %>% filter(month != 12), 
+          covars0) %>% 
+  mutate(year = 2023)
+
+covars %>%
+  group_by(year, month) %>% 
+  summarise_all(~sum(is.na(.)))
+
+lagfun <- function(dat)
+{
+  out <- list()
+  m <- 7:12
+  for (i in 1:length(m))
+  {
+    out[[i]] <- bind_cols(
+      dat %>% 
+        filter(month == m[i]) %>%
+        rename_at(vars(-(longitude:month)),function(x) paste0(x, "_0")),
+      dat %>% 
+        filter(month == m[i] - 1) %>%
+        select(-(longitude:month)) %>%
+        rename_all(function(x) paste0(x, "_1")),
+      dat %>% 
+        filter(month == m[i] - 2) %>%
+        select(-(longitude:month)) %>%
+        rename_all(function(x) paste0(x, "_2")),
+      dat %>% 
+        filter(month == m[i] - 3) %>%
+        select(-(longitude:month)) %>%
+        rename_all(function(x) paste0(x, "_3"))
+    )
+  }
+  return(bind_rows(out))
+}
+covars <- lagfun(covars)
+gha_grid <- gha_grid %>%
+  rename(longitude=long, latitude=lat) %>%
+  full_join(covars, 
+            by=join_by(longitude, latitude)) %>%
+  relocate(year, month, .after=unit)
+
+saveRDS(gha_grid, file="~/Downloads/Ghana/gha_grid.rds")
+
+# data
 covars <- get_cds(user, cds.key, 
-                  year=2023, month=sprintf("%02d", 5:12), 
+                  year=2023, month=sprintf("%02d", 4:12), 
                   what=cbind(gha_hlc$long, gha_hlc$lat))
+covars0 <- get_cds(user, cds.key, 
+                  year=2022, month=12, 
+                  what=cbind(gha_hlc$long, gha_hlc$lat))
+
+covars <- collapfun(covars) 
+covars0 <- collapfun(covars0)
+
+covars <- bind_rows(covars %>% filter(month != 12), 
+                    covars0) %>% 
+  mutate(year = 2023)
+
+covars %>%
+  group_by(year, month) %>% 
+  summarise_all(~sum(is.na(.)))
+
+covars <- lagfun(covars)
+gha_hlc <- gha_hlc %>%
+  rename(longitude=long, latitude=lat) %>%
+  left_join(covars, 
+            by=join_by(year, month, longitude, latitude)) 
+
+saveRDS(gha_hlc, file="~/Downloads/Ghana/gha_hlc.rds")
+
