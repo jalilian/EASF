@@ -129,10 +129,12 @@ gha_hlc <- gha_hlc %>%
 
 gha_hlc <- gha_hlc %>% 
   filter(!is.na(mm)) %>%
-  select(eventDate, value, mm) %>%
+  select(`Org unit name`, eventDate, value, mm) %>%
   arrange(value, eventDate) %>% 
-  rename("House ID"="value", "Number of An."="mm") %>% 
+  rename("House ID"="value", "Number of An."="mm",
+         "unit"="Org unit name") %>% 
   mutate(year=year(eventDate), month=month(eventDate)) %>%
+  mutate(unit=str_replace(unit, " EASF Site| EASF site", "")) %>% 
   relocate(year, month, .after=eventDate)
 
 gha_hlc %>%
@@ -165,7 +167,7 @@ gha_coords <- gha_coords %>%
   mutate(`house ID`=str_remove_all(str_to_upper(`house ID`), " "))
 
 gha_hlc <- gha_hlc %>% 
-  group_by(year, month, `House ID`) %>%
+  group_by(unit, year, month, `House ID`) %>%
   summarise(`Number of An.` = sum(`Number of An.`)) %>%
   ungroup()
 
@@ -179,51 +181,61 @@ gha_hlc <- gha_hlc %>%
 
 gha_hlc %>% write_csv(file="~/Downloads/Ghana/gha_hlc.csv")
 
-library("mapview")
 gha_hlc %>%
-  distinct(`House ID`, long, lat) %>%
+  distinct(unit, `House ID`, long, lat) %>%
   st_as_sf(., coords=c("long", "lat"), crs="WGS84") %>%
-  mapview()
+  ggplot(aes(colour=unit)) +
+  geom_sf() +
+  geom_sf_label(aes(label=unit)) +
+  theme_light()
 
-gha_hlc %>% filter(str_detect(`House ID`, "OKU")) %>%
+library("mapview")
+mapview(gha_hlc %>%
+          distinct(unit, `House ID`, long, lat) %>%
+          st_as_sf(., coords=c("long", "lat"), crs="WGS84"), 
+        zcol="unit")
+
+gha_hlc %>% 
+  filter(unit %in% c("Antokrom", "Dadeiso", "Karlo", "Kwasuo"))  %>%
+  summarise(summary(long), summary(lat))
+
+gha_hlc %>% 
+  filter(unit %in% c("Doblo Gono", "Oduman", "Okushibiade"))  %>%
+  summarise(summary(long), summary(lat))
+
+gha_hlc %>% 
+  filter(unit %in% c("Duta", "Glitame", "Klikor"))  %>%
   summarise(summary(long), summary(lat))
 
 gha_grid <- bind_rows(
-  expand_grid(long=seq(-3.085, -3.075, l=10),
-              lat=seq(6.078, 6.088, l=10)) %>%
-    mutate(unit="Antokrom"),
-  expand_grid(long=seq(-3.042, -3.027, l=10),
-              lat=seq(6.108, 6.126, l=10)) %>%
-    mutate(unit="Dadeiso"),
-  expand_grid(long=seq(-0.360, -0.350, l=10),
-              lat=seq(5.698, 5.708, l=10)) %>%
-    mutate(unit="Doblo Gono"),
-  expand_grid(long=seq(1.183, 1.195, l=10),
-              lat=seq(6.146, 6.160, l=10)) %>%
-    mutate(unit="Duta"),
-  expand_grid(long=seq(1.017, 1.027, l=10),
-              lat=seq(6.102, 6.112, l=10)) %>%
-    mutate(unit="Glitame"),
-  expand_grid(long=seq(-3.005, -2.995, l=10),
-              lat=seq(6.130, 6.140, l=10)) %>%
-    mutate(unit="Karlo"),
-  expand_grid(long=seq(1.025, 1.035, l=10),
-              lat=seq(6.073, 6.083, l=10)) %>%
-    mutate(unit="Klikor"),
-  expand_grid(long=seq(-3.111, -3.101, l=10),
-              lat=seq(6.190, 6.200, l=10)) %>%
-    mutate(unit="Kwasuo"),
-  expand_grid(long=seq(-0.336, -0.326, l=10),
-              lat=seq(5.642, 5.652, l=10)) %>%
-    mutate(unit="Oduman"),
-  expand_grid(long=seq(-0.390, -0.380, l=10),
-              lat=seq(5.695, 5.705, l=10)) %>%
-    mutate(unit="Okushibiade")
+  expand_grid(long=seq(-3.2, -2.9, l=30),
+              lat=seq(6, 6.3, l=30)),
+  expand_grid(long=seq(-0.5, -0.2, l=30),
+              lat=seq(5.55, 5.85, l=30)),
+  expand_grid(long=seq(0.9, 1.2, l=30),
+              lat=seq(5.9, 6.2, l=30))
 )
 
-gha_grid %>%
-  st_as_sf(., coords=c("long", "lat"), crs="WGS84") %>%
-  mapview()
+gha_map <- 
+  read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_GHA_0.kmz")
+
+gha_grid <- gha_grid %>% 
+  mutate(long1=long, lat1=lat) %>%
+  st_as_sf(., coords=c("long1", "lat1"), crs="WGS84") %>%
+  st_filter(., gha_map) %>%
+  as_tibble() %>%
+  select(-geometry)
+
+bind_rows(
+  gha_hlc %>% select(long, lat, unit),
+  gha_grid %>% mutate(unit="grid")
+)  %>%
+  st_as_sf(., coords=c("long", "lat"), crs="WGS84") %>% 
+  mapview(zcol="unit")
+
+
+# =========================================================
+# land cover, population density and elevation data
 
 source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_land_covars_africa.R")
 
@@ -249,9 +261,8 @@ covars <- get_cds(user, cds.key,
                   year=2023, month=sprintf("%02d", 4:12), 
                   what=cbind(gha_grid$long, gha_grid$lat))
 
-covars0 <- get_cds(user, cds.key, 
-                  year=2022, month=12, 
-                  what=cbind(gha_grid$long, gha_grid$lat))
+covars <- covars %>%
+  mutate(skt = skt -273.15)
 
 collapfun <- function(dat)
 {
@@ -268,10 +279,6 @@ collapfun <- function(dat)
 }
 
 covars <- collapfun(covars) 
-covars0 <- collapfun(covars0)
-covars <- bind_rows(covars %>% filter(month != 12), 
-          covars0) %>% 
-  mutate(year = 2023)
 
 covars %>%
   group_by(year, month) %>% 
@@ -316,16 +323,11 @@ saveRDS(gha_grid, file="~/Downloads/Ghana/gha_grid.rds")
 covars <- get_cds(user, cds.key, 
                   year=2023, month=sprintf("%02d", 4:12), 
                   what=cbind(gha_hlc$long, gha_hlc$lat))
-covars0 <- get_cds(user, cds.key, 
-                  year=2022, month=12, 
-                  what=cbind(gha_hlc$long, gha_hlc$lat))
+
+covars <- covars %>%
+  mutate(skt = skt -273.15)
 
 covars <- collapfun(covars) 
-covars0 <- collapfun(covars0)
-
-covars <- bind_rows(covars %>% filter(month != 12), 
-                    covars0) %>% 
-  mutate(year = 2023)
 
 covars %>%
   group_by(year, month) %>% 
