@@ -208,12 +208,12 @@ gha_hlc %>%
   summarise(summary(long), summary(lat))
 
 gha_grid <- bind_rows(
-  expand_grid(long=seq(-3.2, -2.9, l=30),
-              lat=seq(6, 6.3, l=30)),
-  expand_grid(long=seq(-0.5, -0.2, l=30),
-              lat=seq(5.55, 5.85, l=30)),
-  expand_grid(long=seq(0.9, 1.2, l=30),
-              lat=seq(5.9, 6.2, l=30))
+  expand_grid(long=seq(-3.2, -2.7, l=50),
+              lat=seq(5.9, 6.4, l=50)),
+  expand_grid(long=seq(-0.6, -0.1, l=50),
+              lat=seq(5.45, 5.95, l=50)),
+  expand_grid(long=seq(0.7, 1.2, l=50),
+              lat=seq(5.9, 6.4, l=50))
 )
 
 gha_map <- 
@@ -315,7 +315,7 @@ gha_grid <- gha_grid %>%
   rename(longitude=long, latitude=lat) %>%
   full_join(covars, 
             by=join_by(longitude, latitude)) %>%
-  relocate(year, month, .after=unit)
+  relocate(year, month, .after=latitude)
 
 saveRDS(gha_grid, file="~/Downloads/Ghana/gha_grid.rds")
 
