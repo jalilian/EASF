@@ -314,25 +314,33 @@ fitfun <- function(dat, max.edge=0.025)
   inla(fm, data=dat, family="zeroinflatednbinomial2",
        #control.family(control.link=list(model="log")),
        #control.compute=list(return.marginals.predictor=TRUE),
-       control.predictor=list(compute=TRUE, link=1)#, 
+       control.predictor=list(compute=TRUE, link=1), 
+       control.inla=list(strategy="laplace", npoints=21),
        #control.inla=list(fast=FALSE, strategy="laplace", dz=0.25, h=1e-5)
        #control.compute=list(config=TRUE, dic=TRUE, waic=TRUE)
-  )
+       silent=1L, num.threads=1)
 }
 
 
-cvfun <- function(dat, max.edge=0.025)
+cvfun <- function(dat, newdat=NULL, max.edge=0.025, mc.cores=4)
 {
-  out <- matrix(NA, ncol=3, nrow=nrow(dat))
-  for (i in 1:nrow(dat))
+  if (is.null(newdat))
+  {
+    idx <- 1:nrow(dat)
+  } else{
+    idx <- nrow(dat) + 1:nrow(newdat)
+    dat <- bind_rows(dat, newdat)
+  }
+  fitifun <- function(i)
   {
     dati <- dat
-    out[i, 3] <- dati$y[i]
     dati$y[i] <- NA
     fiti <- fitfun(dati, max.edge=max.edge)
-    #c(dic=fiti$dic$dic, waic=fiti$waic$waic)
-    out[i, 1:2] <- unlist(fiti$summary.fitted.values[i, c(1, 2)])
+    unlist(fiti$summary.fitted.values[i, c(1, 2)])
   }
+  out <- parallel::mclapply(idx, fitifun, mc.cores=mc.cores)
+  out <- matrix(unlist(out), ncol=2, byrow=TRUE)
+  out <- cbind(out, dat$y[idx])
   return(out)
 }
 
@@ -434,34 +442,52 @@ ggarrange(
 
 # new
 
-cv1 <- cvfun(dat1 %>% filter(method == "CDC"), max.edge=NULL)
+dat11 <- dat1 %>% filter(method == "CDC")
+dat22 <- dat2 %>% 
+  filter(`Collection method` == "CDC",
+         month %in% c("April", "March", "October", "January"))
+
+cv1 <- cvfun(dat11, max.edge=NULL)
 mean(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2)
 mean(((cv1[, 3] - cv1[, 1]) / (1 + cv1[, 3]))^2)
+quantile(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2, c(0.025, 0.975))
 
 matrix(unlist(lapply(lapply(fit1$marginals.fitted.values, 
                             function(o){ inla.tmarginal(exp, o) }),
                      inla.zmarginal)), ncol=7, byrow=TRUE)
 
-dat22 <- dat2 %>% 
-  filter(`Collection method` == "CDC",
-         month %in% c("April", "March", "October", "January"))
-
-nsim <- 999 
-cv2s <- matrix(NA, nrow=nsim, ncol=2)
+nsim <- 499 
+mc.cores <- 6
+cv2s <- cv21s <- cv12s <- matrix(NA, nrow=nsim, ncol=2)
 for (j in 1:nsim)
 {
-  try(cv2 <- cvfun(dat22 %>%
-                 filter(`House ID` %in% 
-                          sample(unique(dat22$`House ID`), size=4)),
-               max.edge=NULL))
-  cv2s[j, 1] <- mean(((cv2[, 3] - cv2[, 1]) / (1 + cv2[, 3]))^2)
-  cv2s[j, 2] <- mean(((cv2[, 3] - cv2[, 1]) / cv2[, 2])^2)
-  cat("\nj: ", j, "\t", cv2s[j, ], "\n")
+  dat222 <- dat22 %>%
+    filter(`House ID` %in% sample(unique(dat22$`House ID`), size=4))
+  cv2 <- cvfun(dat222, newdat=NULL, max.edge=NULL, mc.cores=mc.cores)
+  cv21 <- cvfun(dat222, newdat=dat11, max.edge=NULL, mc.cores=mc.cores)
+  cv12 <- cvfun(dat11, newdat=dat222, max.edge=NULL, mc.cores=mc.cores)
+
+  if (is.numeric(cv2) & is.numeric(cv21) & is.numeric(cv12))
+  {
+    cv2s[j, 1] <- mean(((cv2[, 3] - cv2[, 1]) / (1 + cv2[, 3]))^2)
+    cv2s[j, 2] <- mean(((cv2[, 3] - cv2[, 1]) / cv2[, 2])^2)
+    cv21s[j, 1] <- mean(((cv21[, 3] - cv21[, 1]) / (1 + cv21[, 3]))^2)
+    cv21s[j, 2] <- mean(((cv21[, 3] - cv21[, 1]) / cv21[, 2])^2)
+    cv12s[j, 1] <- mean(((cv12[, 3] - cv12[, 1]) / (1 + cv12[, 3]))^2)
+    cv12s[j, 2] <- mean(((cv12[, 3] - cv12[, 1]) / cv12[, 2])^2)
+  }
+  cat("\nj: ", j, "\t", cv2s[j, ], "\t", cv21s[j, ], "\t", cv12s[j, ], "\n")
 }
 
 hist(log(cv2s[, 2]))
 abline(v=log(mean(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2)), col="blue")
-mean(cv2s[, 2])
-quantile(cv2s[, 2], c(0.025, 0.975))
+mean(cv2s[, 2], na.rm=TRUE)
+quantile(cv2s[, 2], c(0.025, 0.975), na.rm=TRUE)
 
-mean(cv2s[, 2] <= mean(((cv1[, 3] - cv1[, 1]) / (1 + cv1[, 3]))^2))
+mean(cv2s[, 2] <= mean(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2), na.rm=TRUE)
+
+
+mean(cv21s[, 2], na.rm=TRUE)
+quantile(cv21s[, 2], c(0.025, 0.975), na.rm=TRUE)
+mean(cv12s[, 2], na.rm=TRUE)
+quantile(cv12s[, 2], c(0.025, 0.975), na.rm=TRUE)
