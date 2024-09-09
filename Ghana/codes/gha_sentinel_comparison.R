@@ -329,3 +329,105 @@ sent_hlc <- sent_hlc %>%
   left_join(covars, 
             by=join_by(year, month, longitude, latitude)) 
 
+
+a <- sent_hlc %>%
+  select(year, month, longitude, latitude, gambiae, 
+         land_cover:ssr_max_3) %>%
+  rename(y=gambiae)
+
+b <- gha_hlc %>%
+  select(year, month, longitude, latitude, `Number of An.`, 
+         land_cover:ssr_max_3) %>%
+  rename(y=`Number of An.`)
+
+saveRDS(a, file="~/Downloads/Ghana/a.rds")
+saveRDS(b, file="~/Downloads/Ghana/b.rds")
+
+###
+
+a <- readRDS("~/Downloads/Ghana/a.rds")
+b <- readRDS("~/Downloads/Ghana/b.rds")
+
+library("INLA")
+library("fmesher")
+
+a <- a %>%
+  mutate(tidx=month,
+         sidx=as.numeric(factor(paste(longitude, latitude, sep=""))))
+b <- b %>%
+  mutate(tidx=month,
+         sidx=as.numeric(factor(paste(longitude, latitude, sep=""))))
+
+fitfun <- function(dat, max.edge=0.025)
+{
+  #mesh <- fm_mesh_2d_inla(loc=cbind(dat$longitude, dat$latitude), 
+  #                        max.edge=max.edge)
+  dat <- dat %>% 
+    mutate(across(contains("_"), ~ scales::rescale(.x, to=c(-1, 1)))) %>%
+    mutate(elevation=scales::rescale(elevation, to=c(-1, 1))) %>%
+    mutate(tidx=as.integer(factor(letters[tidx])),
+           sidx=as.integer(factor(letters[sidx])))
+  fm <- y ~  elevation + 
+    f(tidx, model="iid", constr=TRUE) + 
+    f(sidx, model="iid", constr=TRUE) +
+    lai_lv_mean_0 + #lai_lv_min_0 + lai_lv_max_0 + lai_lv_sd_0 + 
+    skt_mean_0 + #skt_min_0 + skt_max_0 + skt_sd_0 + 
+    #tp_mean_0 + #tp_min_0 + tp_max_0 + tp_sd_0 + 
+    swvl1_mean_0 #+ #swvl1_min_0 + swvl1_max_0 + swvl1_sd_0 +
+  #  lai_hv_mean_1 + #lai_hv_min_1 + lai_hv_max_1 + lai_hv_sd_1 + 
+  #  lai_lv_mean_1 + #lai_lv_min_1 + lai_lv_max_1 + lai_lv_sd_1 + 
+  #  skt_mean_1 + #skt_min_1 + skt_max_1 + skt_sd_1 +
+  #  tp_mean_1 + #tp_min_1 + tp_max_1 + tp_sd_1 + 
+  #  swvl1_mean_1 #+ #swvl1_min_1 + swvl1_max_1 + swvl1_sd_1 #+ 
+  #lai_hv_mean_2 + #lai_hv_min_2 + lai_hv_max_2 + lai_hv_sd_2 + 
+  #lai_lv_mean_2 + #lai_lv_min_2 + lai_lv_max_2 + lai_lv_sd_2 +
+  #skt_mean_2 + #skt_min_2 + skt_max_2 + skt_sd_2 +
+  #tp_mean_2 + #tp_min_2 + tp_max_2 + tp_sd_2 +
+  #swvl1_mean_2 #+ swvl1_min_2 + swvl1_max_2 + swvl1_sd_2
+  inla(fm, data=dat, family="zeroinflatednbinomial2",
+       #control.family(control.link=list(model="log")),
+       #control.compute=list(return.marginals.predictor=TRUE),
+       control.predictor=list(compute=TRUE, link=1), 
+       control.inla=list(strategy="laplace", npoints=21),
+       #control.inla=list(fast=FALSE, strategy="laplace", dz=0.25, h=1e-5)
+       #control.compute=list(config=TRUE, dic=TRUE, waic=TRUE)
+       silent=1L, num.threads=1)
+}
+
+fit1 <- fitfun(a)
+fit1$summary.fixed
+fit1$summary.hyperpar
+
+fit2 <- fitfun(b)
+fit2$summary.fixed
+fit2$summary.hyperpar
+
+cvfun <- function(dat, newdat=NULL, max.edge=0.025, mc.cores=4)
+{
+  if (is.null(newdat))
+  {
+    idx <- 1:nrow(dat)
+  } else{
+    idx <- nrow(dat) + 1:nrow(newdat)
+    dat <- bind_rows(dat, newdat)
+  }
+  fitifun <- function(i)
+  {
+    dati <- dat
+    dati$y[i] <- NA
+    fiti <- fitfun(dati, max.edge=max.edge)
+    unlist(fiti$summary.fitted.values[i, c(1, 2)])
+  }
+  out <- parallel::mclapply(idx, fitifun, mc.cores=mc.cores)
+  out <- matrix(unlist(out), ncol=2, byrow=TRUE)
+  out <- cbind(out, dat$y[idx])
+  return(out)
+}
+
+cv1 <- cvfun(a)
+mean(((cv1[, 1] - a$y) / (a$y + 1))^2)
+(mean(((cv1[, 1] - a$y) / cv1[, 2])^2))
+
+cv2 <- cvfun(b)
+mean(((cv1[, 1] - b$y) / (b$y + 1))^2)
+(mean(((cv1[, 1] - b$y) / cv1[, 2])^2))
