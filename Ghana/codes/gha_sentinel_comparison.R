@@ -367,24 +367,13 @@ fitfun <- function(dat, max.edge=0.025)
     mutate(elevation=scales::rescale(elevation, to=c(-1, 1))) %>%
     mutate(tidx=as.integer(factor(letters[tidx])),
            sidx=as.integer(factor(letters[sidx])))
-  fm <- y ~  elevation + 
+  fm <- y ~  elevation + pop_density +
     f(tidx, model="iid", constr=TRUE) + 
     f(sidx, model="iid", constr=TRUE) +
-    lai_lv_mean_0 + #lai_lv_min_0 + lai_lv_max_0 + lai_lv_sd_0 + 
-    skt_mean_0 + #skt_min_0 + skt_max_0 + skt_sd_0 + 
-    #tp_mean_0 + #tp_min_0 + tp_max_0 + tp_sd_0 + 
-    swvl1_mean_0 #+ #swvl1_min_0 + swvl1_max_0 + swvl1_sd_0 +
-  #  lai_hv_mean_1 + #lai_hv_min_1 + lai_hv_max_1 + lai_hv_sd_1 + 
-  #  lai_lv_mean_1 + #lai_lv_min_1 + lai_lv_max_1 + lai_lv_sd_1 + 
-  #  skt_mean_1 + #skt_min_1 + skt_max_1 + skt_sd_1 +
-  #  tp_mean_1 + #tp_min_1 + tp_max_1 + tp_sd_1 + 
-  #  swvl1_mean_1 #+ #swvl1_min_1 + swvl1_max_1 + swvl1_sd_1 #+ 
-  #lai_hv_mean_2 + #lai_hv_min_2 + lai_hv_max_2 + lai_hv_sd_2 + 
-  #lai_lv_mean_2 + #lai_lv_min_2 + lai_lv_max_2 + lai_lv_sd_2 +
-  #skt_mean_2 + #skt_min_2 + skt_max_2 + skt_sd_2 +
-  #tp_mean_2 + #tp_min_2 + tp_max_2 + tp_sd_2 +
-  #swvl1_mean_2 #+ swvl1_min_2 + swvl1_max_2 + swvl1_sd_2
-  inla(fm, data=dat, family="zeroinflatednbinomial2",
+    u10_mean_0 + v10_mean_0 + lai_hv_mean_0 + lai_lv_mean_0 + 
+    skt_mean_0 + sp_mean_0 + tp_mean_0 + swvl1_mean_0 + 
+    pev_mean_0 + ssr_mean_0
+  inla(fm, data=dat, family="nbinomial",
        #control.family(control.link=list(model="log")),
        #control.compute=list(return.marginals.predictor=TRUE),
        control.predictor=list(compute=TRUE, link=1), 
@@ -431,3 +420,43 @@ mean(((cv1[, 1] - a$y) / (a$y + 1))^2)
 cv2 <- cvfun(b)
 mean(((cv1[, 1] - b$y) / (b$y + 1))^2)
 (mean(((cv1[, 1] - b$y) / cv1[, 2])^2))
+
+
+nsim <- 499 
+mc.cores <- 6
+cv2s <- cv21s <- cv12s <- matrix(NA, nrow=nsim, ncol=2)
+for (j in 1:nsim)
+{
+  b2 <- b %>%
+    filter(sidx %in% sample(unique(b$sidx), size=16))
+  cv2 <- cvfun(b2, newdat=NULL, max.edge=NULL, mc.cores=mc.cores)
+  cv21 <- cvfun(b2, newdat=a, max.edge=NULL, mc.cores=mc.cores)
+  cv12 <- cvfun(a, newdat=b2, max.edge=NULL, mc.cores=mc.cores)
+  
+  if (is.numeric(cv2) & is.numeric(cv21) & is.numeric(cv12))
+  {
+    cv2s[j, 1] <- mean(((cv2[, 3] - cv2[, 1]) / (1 + cv2[, 3]))^2)
+    cv2s[j, 2] <- mean(((cv2[, 3] - cv2[, 1]) / cv2[, 2])^2)
+    cv21s[j, 1] <- mean(((cv21[, 3] - cv21[, 1]) / (1 + cv21[, 3]))^2)
+    cv21s[j, 2] <- mean(((cv21[, 3] - cv21[, 1]) / cv21[, 2])^2)
+    cv12s[j, 1] <- mean(((cv12[, 3] - cv12[, 1]) / (1 + cv12[, 3]))^2)
+    cv12s[j, 2] <- mean(((cv12[, 3] - cv12[, 1]) / cv12[, 2])^2)
+  }
+  cat("\nj: ", j, "\t", cv2s[j, ], "\t", cv21s[j, ], "\t", cv12s[j, ], "\n")
+}
+
+
+
+hist(log(cv2s[, 2]))
+abline(v=log(mean(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2)), col="blue")
+mean(cv2s[, 2], na.rm=TRUE)
+quantile(cv2s[, 2], c(0.025, 0.975), na.rm=TRUE)
+
+mean(cv2s[, 2] <= mean(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2), na.rm=TRUE)
+
+
+mean(cv21s[, 2], na.rm=TRUE)
+quantile(cv21s[, 2], c(0.025, 0.975), na.rm=TRUE)
+mean(cv12s[, 2], na.rm=TRUE)
+quantile(cv12s[, 2], c(0.025, 0.975), na.rm=TRUE)
+
