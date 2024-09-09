@@ -124,14 +124,17 @@ easf_coords <- read_csv("~/Downloads/Ghana/gha_coords.csv") %>%
   mutate(`house ID`=str_remove_all(`house ID`, " ")) %>%
   distinct(`house ID`, long, lat)
 
-library("mapview")
-sent_coords %>% 
-  st_as_sf(., coords=c("longitude", "latitude"), crs="WGS84") %>%
-  mapview()
+if (FALSE)
+{
+  library("mapview")
+  sent_coords %>% 
+    st_as_sf(., coords=c("longitude", "latitude"), crs="WGS84") %>%
+    mapview()
   
-easf_coords %>%
-  st_as_sf(., coords=c("long", "lat"), crs="WGS84") %>%
-  mapview()
+  easf_coords %>%
+    st_as_sf(., coords=c("long", "lat"), crs="WGS84") %>%
+    mapview()
+}
 
 bind_rows(
   sent_coords %>% 
@@ -239,13 +242,90 @@ sent_hlc <- bind_cols(sent_hlc, covars)
 
 source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_Copernicus_climate_data.R")
 
-user <- "****************"
-cds.key <- "********************************"
+key <- "********************************"
 
-covars <- get_cds(user, cds.key, 
+covars <- get_cds(key, user="ecmwfr",
                   year=2023, month=sprintf("%02d", 4:12), 
                   what=cbind(gha_hlc$long, gha_hlc$lat))
 
 covars <- covars %>%
   mutate(skt = skt -273.15)
+
+
+collapfun <- function(dat)
+{
+  dat %>%
+    mutate(time=as.Date(as.POSIXct(time)),
+           year=year(time), month=month(time)) %>% 
+    group_by(longitude, latitude, year, month) %>%
+    summarise(across(u10:ssr, list(mean=\(x) mean(x, na.rm=TRUE),
+                                     sd=\(x) sd(x, na.rm=TRUE),
+                                     min=\(x) min(x, na.rm=TRUE),
+                                     max=\(x) max(x, na.rm=TRUE)),
+                     .names="{.col}_{.fn}")) %>%
+    ungroup()
+}
+
+covars <- collapfun(covars) 
+
+covars %>%
+  group_by(year, month) %>% 
+  summarise_all(~sum(is.na(.)))
+
+lagfun <- function(dat)
+{
+  out <- list()
+  m <- 7:12
+  for (i in 1:length(m))
+  {
+    out[[i]] <- bind_cols(
+      dat %>% 
+        filter(month == m[i]) %>%
+        rename_at(vars(-(longitude:month)),function(x) paste0(x, "_0")),
+      dat %>% 
+        filter(month == m[i] - 1) %>%
+        select(-(longitude:month)) %>%
+        rename_all(function(x) paste0(x, "_1")),
+      dat %>% 
+        filter(month == m[i] - 2) %>%
+        select(-(longitude:month)) %>%
+        rename_all(function(x) paste0(x, "_2")),
+      dat %>% 
+        filter(month == m[i] - 3) %>%
+        select(-(longitude:month)) %>%
+        rename_all(function(x) paste0(x, "_3"))
+    )
+  }
+  return(bind_rows(out))
+}
+
+covars <- lagfun(covars)
+
+gha_hlc <- gha_hlc %>%
+  rename(longitude=long, latitude=lat) %>%
+  left_join(covars, 
+            by=join_by(year, month, longitude, latitude)) 
+
+
+covars <- get_cds(key, user="ecmwfr",
+                  year=2023, month=sprintf("%02d", 4:12), 
+                  what=cbind(sent_hlc$longitude, sent_hlc$latitude))
+
+covars <- covars %>%
+  mutate(skt = skt -273.15)
+
+
+covars <- collapfun(covars) 
+
+covars %>%
+  group_by(year, month) %>% 
+  summarise_all(~sum(is.na(.)))
+
+covars <- lagfun(covars)
+
+sent_hlc <- sent_hlc %>%
+  mutate(year=2023, month=match(month, month.name)) %>%
+  relocate(year, .before=month) %>%
+  left_join(covars, 
+            by=join_by(year, month, longitude, latitude)) 
 
