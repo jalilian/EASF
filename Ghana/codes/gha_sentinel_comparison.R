@@ -171,37 +171,81 @@ sdata %>%
   summarise(funestus=sum(as.numeric(value), na.rm=TRUE)) %>%
   ungroup()
 
-
-sdata %>%
-  group_by(programname, `Org unit name`, `house ID`, month) %>% 
+sent_psc <- sdata %>% 
   filter(programname == "CID",
          str_detect(`Datat element name`, "An. gambiae s.l.: Collected")) %>%
-  summarise(gam=sum(as.numeric(value)))
+  summarise(gambiae=sum(as.numeric(value), na.rm=TRUE)) %>%
+  ungroup()
 
-sdata %>% count(eventDate) %>% print(n=500)
-sdata %>% count(geometry) %>% print(n=500)
-sdata %>% count(longitude, latitude) %>% print(n=500)
-sdata %>% 
-  filter(`Datat element name` == "HH Number") %>%
-  count(value) %>% print(n=500)
+## Collection intensity 
 
-sdata %>% count(`Org unit name`, programname, eventDate)
+gha_hlc <- read_csv("~/Downloads/Ghana/gha_hlc.csv")
 
-sdata  %>% count(`Datat element name`) %>% print(n=500)
+# t-tests
+t.test(
+  gha_hlc %>% pull(`Number of An.`),
+  sent_hlc %>% filter(!str_detect(`house ID`, "SW|PSC")) %>% 
+    pull(gambiae)
+  )
 
-sdata  %>% 
-  group_by(`Org unit name`) %>%
-  filter(`Datat element name` == "HH Number") %>%
-  count(value) %>% print(n=500)
+t.test(
+  gha_psc %>% filter(!str_detect(`House ID`, "PSC-PSC-13")) %>% 
+    pull(`Number of An.`),
+  sent_psc %>% pull(gambiae)
+  )
 
-sdata %>%
-  filter(`Datat element name` == "Collection Method Indoor") %>% 
-  count(value)
+data.frame(program=rep(c("EASF", "Routine"), 2), 
+           method=rep(c("HLC", "PSC"), each=2),
+           mean=c(mean(gha_hlc %>% pull(`Number of An.`)),
+                  mean(sent_hlc %>% filter(!str_detect(`house ID`, "SW|PSC")) %>% 
+                         pull(gambiae)),
+                  mean(gha_psc %>% filter(!str_detect(`House ID`, "PSC-PSC-13")) %>% 
+                         pull(`Number of An.`)),
+                  mean(sent_psc %>% pull(gambiae)))) %>%
+  ggplot(aes(x=mean, y=program, fill=method)) +
+  geom_bar(stat="identity",
+           position=position_dodge()) +
+  labs(x="Average number of collected An. gambiae",
+      y="Sampling program") +
+  theme_classic()
 
-sdata[[1]] %>%
-  filter(`Datat element name` == "HH Name (HLC)") %>%
-  count(value)
+## Predictive power 
 
-sdata[[2]] %>%
-  filter(`Datat element name` == "HH Name (CID)") %>%
-  count(value)
+sent_hlc <- sent_hlc %>% 
+  left_join(sent_coords %>%
+              rename("house ID"="HH"),
+            by=join_by(`house ID`)) %>%
+  na.omit() %>%
+  filter(!str_detect(`house ID`, "PSC"))
+
+
+# =========================================================
+# land cover, population density and elevation data
+
+source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_land_covars_africa.R")
+
+covars <- get_covars(gha_hlc %>% select(long, lat) %>% as.matrix(),
+                     path="~/Downloads/Africa_covars/")
+names(covars) <- c("land_cover", "pop_density", "elevation")
+gha_hlc <- bind_cols(gha_hlc, covars)
+
+covars <- get_covars(sent_hlc %>% select(longitude, latitude) %>% as.matrix(),
+                     path="~/Downloads/Africa_covars/")
+names(covars) <- c("land_cover", "pop_density", "elevation")
+sent_hlc <- bind_cols(sent_hlc, covars)
+
+# =========================================================
+# Copernicus climate data
+
+source("https://raw.githubusercontent.com/jalilian/CEASE/main/Ethiopia/codes/get_Copernicus_climate_data.R")
+
+user <- "****************"
+cds.key <- "********************************"
+
+covars <- get_cds(user, cds.key, 
+                  year=2023, month=sprintf("%02d", 4:12), 
+                  what=cbind(gha_hlc$long, gha_hlc$lat))
+
+covars <- covars %>%
+  mutate(skt = skt -273.15)
+
