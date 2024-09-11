@@ -360,24 +360,28 @@ b <- b %>%
 
 fitfun <- function(dat, max.edge=0.025)
 {
-  #mesh <- fm_mesh_2d_inla(loc=cbind(dat$longitude, dat$latitude), 
-  #                        max.edge=max.edge)
   dat <- dat %>% 
     mutate(across(contains("_"), ~ scales::rescale(.x, to=c(-1, 1)))) %>%
     mutate(elevation=scales::rescale(elevation, to=c(-1, 1))) %>%
     mutate(tidx=as.integer(factor(letters[tidx])),
            sidx=as.integer(factor(letters[sidx])))
   fm <- y ~  elevation + pop_density +
-    f(tidx, model="iid", constr=TRUE) + 
+    f(tidx, model="rw1", constr=TRUE) + 
     f(sidx, model="iid", constr=TRUE) +
     u10_mean_0 + v10_mean_0 + lai_hv_mean_0 + lai_lv_mean_0 + 
     skt_mean_0 + sp_mean_0 + tp_mean_0 + swvl1_mean_0 + 
-    pev_mean_0 + ssr_mean_0
+    pev_mean_0 + ssr_mean_0 +
+    u10_sd_0 + v10_sd_0 + lai_hv_sd_0 + lai_lv_sd_0 + 
+    skt_sd_0 + sp_sd_0 + tp_sd_0 + swvl1_sd_0 + 
+    pev_sd_0 + ssr_sd_0 +
+    u10_mean_1 + v10_mean_1 + lai_hv_mean_1 + lai_lv_mean_1 + 
+    skt_mean_1 + sp_mean_1 + tp_mean_1 + swvl1_mean_1 + 
+    pev_mean_1 + ssr_mean_1 
   inla(fm, data=dat, family="nbinomial",
        #control.family(control.link=list(model="log")),
        #control.compute=list(return.marginals.predictor=TRUE),
        control.predictor=list(compute=TRUE, link=1), 
-       control.inla=list(strategy="laplace", npoints=21),
+       #control.inla=list(strategy="laplace", npoints=21),
        #control.inla=list(fast=FALSE, strategy="laplace", dz=0.25, h=1e-5)
        #control.compute=list(config=TRUE, dic=TRUE, waic=TRUE)
        silent=1L, num.threads=1)
@@ -429,6 +433,22 @@ for (j in 1:nsim)
 {
   b2 <- b %>%
     filter(sidx %in% sample(unique(b$sidx), size=16))
+  a1 <- NULL
+  for (i in 1:16)
+  {
+    a1 <- bind_rows(
+      a1,
+      a[-48, ] %>% 
+        filter(sidx == i, 
+               month %in% sample(7:12, 
+                                 size=(b2 %>% count(sidx) %>% pull(n))[i]))
+      )
+  }
+  a1 <- a1  %>%
+    distinct(sidx, month, .keep_all=TRUE)
+  bind_rows(a1, a %>% 
+              filter(sidx==1, 
+                     month %in% sample(7:12, size=(b2 %>% count(sidx) %>% pull(n))[1])))
   cv2 <- cvfun(b2, newdat=NULL, max.edge=NULL, mc.cores=mc.cores)
   cv21 <- cvfun(b2, newdat=a, max.edge=NULL, mc.cores=mc.cores)
   cv12 <- cvfun(a, newdat=b2, max.edge=NULL, mc.cores=mc.cores)
@@ -454,6 +474,8 @@ quantile(cv2s[, 2], c(0.025, 0.975), na.rm=TRUE)
 
 mean(cv2s[, 2] <= mean(((cv1[, 3] - cv1[, 1]) / cv1[, 2])^2), na.rm=TRUE)
 
+mean(cv12s[, 2] <= mean(cv21s[, 2])) 
+mean(cv21s[, 2] <= mean(cv12s[, 2]))
 
 mean(cv21s[, 2], na.rm=TRUE)
 quantile(cv21s[, 2], c(0.025, 0.975), na.rm=TRUE)
