@@ -370,13 +370,13 @@ fitfun <- function(dat, max.edge=0.025)
     f(sidx, model="iid", constr=TRUE) +
     u10_mean_0 + v10_mean_0 + lai_hv_mean_0 + lai_lv_mean_0 + 
     skt_mean_0 + sp_mean_0 + tp_mean_0 + swvl1_mean_0 + 
-    pev_mean_0 + ssr_mean_0 +
-    u10_sd_0 + v10_sd_0 + lai_hv_sd_0 + lai_lv_sd_0 + 
-    skt_sd_0 + sp_sd_0 + tp_sd_0 + swvl1_sd_0 + 
-    pev_sd_0 + ssr_sd_0 +
-    u10_mean_1 + v10_mean_1 + lai_hv_mean_1 + lai_lv_mean_1 + 
-    skt_mean_1 + sp_mean_1 + tp_mean_1 + swvl1_mean_1 + 
-    pev_mean_1 + ssr_mean_1 
+    pev_mean_0 + ssr_mean_0 #+
+    #u10_sd_0 + v10_sd_0 + lai_hv_sd_0 + lai_lv_sd_0 + 
+    #skt_sd_0 + sp_sd_0 + tp_sd_0 + swvl1_sd_0 + 
+    #pev_sd_0 + ssr_sd_0 +
+    #u10_mean_1 + v10_mean_1 + lai_hv_mean_1 + lai_lv_mean_1 + 
+    #skt_mean_1 + sp_mean_1 + tp_mean_1 + swvl1_mean_1 + 
+    #pev_mean_1 + ssr_mean_1 
   inla(fm, data=dat, family="nbinomial",
        #control.family(control.link=list(model="log")),
        #control.compute=list(return.marginals.predictor=TRUE),
@@ -388,11 +388,11 @@ fitfun <- function(dat, max.edge=0.025)
 }
 
 fit1 <- fitfun(a)
-fit1$summary.fixed
+round(fit1$summary.fixed[, c(1, 3, 5)], 2)
 fit1$summary.hyperpar
 
 fit2 <- fitfun(b)
-fit2$summary.fixed
+round(fit2$summary.fixed[, c(1, 3, 5)], 2)
 fit2$summary.hyperpar
 
 cvfun <- function(dat, newdat=NULL, max.edge=0.025, mc.cores=4)
