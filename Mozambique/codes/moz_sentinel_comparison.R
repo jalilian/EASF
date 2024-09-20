@@ -39,7 +39,9 @@ efforts <- bind_rows(
   mutate(`Date of collection`=as.Date(`Date of collection`, 
                                       format="%d/%m/%Y"),
          year=as.integer(substr(`Date of collection`, 1, 4)),
-         month=as.integer(substr(`Date of collection`, 6, 7))) %>%
+         month=as.integer(substr(`Date of collection`, 6, 7)))
+
+efforts %>%
   group_by(program, District, year, month) %>% count(`House ID`)
 
 # =========================================================
