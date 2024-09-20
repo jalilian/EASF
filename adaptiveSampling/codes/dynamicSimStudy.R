@@ -60,7 +60,7 @@ fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1))
   D <- as.polygonal(domain)$bdry[[1]]
   mh <- fm_mesh_2d_inla(loc=cbind(dt$longitude, dt$latitude),
                         loc.domain=cbind(D$x, D$y),
-                        max.edge=2, offset=NULL)
+                        max.edge=0.8, offset=NULL)
   dt <- data.frame(longitude=mh$loc[, 1], 
                    latitude=mh$loc[, 2]) %>%
     mutate(z1=interp.im(z1, list(x=longitude, y=latitude)), 
@@ -69,59 +69,72 @@ fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1))
            s1idx=1:mh$n, s2idx=1:mh$n, s3idx=1:mh$n) %>%
     left_join(dt, by=c("longitude", "latitude", "z1", "z2", "z3"))
   spde <- inla.spde2.matern(mesh=mh, alpha=2, constr=TRUE)
-  fit <- inla(y ~ 1 + z1 + z2 + z3 + 
-                f(s1idx, z1, model=spde) + f(s2idx, z2, model=spde) + 
-                f(s3idx, z3, model=spde), 
+  fit <- inla(y ~ 1 + z1 + z2 + #z3 + 
+                f(s1idx, z1, model=spde) + 
+                f(s2idx, z2, model=spde),# + 
+                #f(s3idx, z3, model=spde), 
               data=dt, family="poisson",
-              control.predictor=list(link=1))
+              control.predictor=list(link=1),
+              verbose=TRUE)
+             #silent=TRUE, num.threads=1)
   mj <- inla.mesh.projector(mh,  dims=rev(z1$dim))
   b1m <- inla.mesh.project(mj, fit$summary.random$s1idx$mean)
   b2m <- inla.mesh.project(mj, fit$summary.random$s2idx$mean)
-  b3m <- inla.mesh.project(mj, fit$summary.random$s3idx$mean)
+  #b3m <- inla.mesh.project(mj, fit$summary.random$s3idx$mean)
   ym <- inla.mesh.project(mj, fit$summary.fitted.values$mean)
   W <- as.owin(z1)
   beta1hat <- as.im(list(x=mj$x, y=mj$y, z=b1m), W=W) +
     fit$summary.fixed$mean[1 + 1]
   beta2hat <- as.im(list(x=mj$x, y=mj$y, z=b2m), W=W) +
     fit$summary.fixed$mean[2 + 1]
-  beta3hat <- as.im(list(x=mj$x, y=mj$y, z=b3m), W=W) +
-    fit$summary.fixed$mean[3 + 1]
+  #beta3hat <- as.im(list(x=mj$x, y=mj$y, z=b3m), W=W) +
+  #  fit$summary.fixed$mean[3 + 1]
   yhat <- as.im(list(x=mj$x, y=mj$y, z=ym), W=W)
-  return(list(beta1hat=beta1hat, beta2hat=beta2hat, beta3hat=beta3hat, 
+  return(list(beta1hat=beta1hat, 
+              beta2hat=beta2hat, 
+              #beta3hat=beta3hat, 
               thetahat=fit$summary.hyperpar$mean,
               y=dt$y[!is.na(dt$y)], yhat=yhat))
 }
 
-simfun <- function(beta0=2, beta1.mu=1, beta1.var=0.1, beta1.scale=1.5,
-                   beta2.mu=1, beta2.var=0.1, beta2.scale=1.5,
-                   beta3.mu=1, beta3.var=0.1, beta3.scale=1.5,
+simfun <- function(beta0=2, 
+                   beta1pars=c(mu=1, var=0.1, scale=1.75, nu=1),
+                   beta2pars=c(mu=1, var=0.1, scale=1.75, nu=1),
+                   #beta3pars=c(mu=1, var=0.1, scale=1.5, nu=1),
                    n=200, cvp=0.2)
 {
   beta1 <- rGRFmatern(W=owin(xrange=z1$xrange, yrange=z1$yrange), 
-                      mu=beta1.mu, var=beta1.var, scale=beta1.scale, 
-                      nu=1, dimyx=z1$dim)
+                      mu=beta1pars["mu"], 
+                      var=beta1pars["var"], 
+                      scale=beta1pars["scale"], 
+                      nu=beta1pars["nu"], dimyx=z1$dim)
   beta2 <- rGRFmatern(W=owin(xrange=z2$xrange, yrange=z2$yrange), 
-                      mu=beta2.mu, var=beta2.var, scale=beta2.scale, 
-                      nu=1, dimyx=z2$dim)
-  beta3 <- rGRFmatern(W=owin(xrange=z3$xrange, yrange=z3$yrange), 
-                      mu=beta3.mu, var=beta3.var, scale=beta3.scale, 
-                      nu=1, dimyx=z3$dim)
-  eta <- beta0 + beta1 * z1 + beta2 * z2 + beta3 * z3
+                      mu=beta2pars["mu"], 
+                      var=beta2pars["var"], 
+                      scale=beta2pars["scale"], 
+                      nu=beta2pars["nu"], dimyx=z2$dim)
+  #beta3 <- rGRFmatern(W=owin(xrange=z3$xrange, yrange=z3$yrange), 
+  #                    mu=beta3pars["mu"], 
+  #                    var=beta3pars["var"], 
+  #                    scale=beta3pars["scale"], 
+  #                    nu=beta3pars["nu"], dimyx=z3$dim)
+  eta <- beta0 + beta1 * z1 + beta2 * z2 #+ beta3 * z3
   S <- samplocs(n=n, grid_percent=0.6)
   dt <- data.frame(longitude=S$x, latitude=S$y, 
                    z1=interp.im(z1, S), 
                    z2=interp.im(z2, S), 
                    z3=interp.im(z3, S), 
-                   eta=interp.im(eta, S)) %>% 
-    na.omit(dt) %>% mutate(y=rpois(n=length(eta), lambda=exp(eta)))
+                   eta=interp.im(eta, S))
+  dt <- na.omit(dt) %>% 
+    mutate(y=rpois(n=length(eta), lambda=exp(eta)))
   fit <- fitfun(dt, z1, z2, z3)
   e1 <- (fit$beta1hat - beta1)
   e2 <- (fit$beta2hat - beta2)
-  e3 <- (fit$beta3hat - beta3)
+  #e3 <- (fit$beta3hat - beta3)
   xy <- list(x=dt$longitude, y=dt$latitude)
   mse1 <- mean((interp.im(e1, xy))^2)
   mse2 <- mean((interp.im(e2, xy))^2)
-  mse3 <- mean((interp.im(e3, xy))^2)
+  #mse3 <- mean((interp.im(e3, xy))^2)
   ep <- (dt$y - interp.im(fit$yhat, xy)) / (dt$y + 0.5 * (dt$y == 0))
   mpe <- mean(ep^2, na.rm=TRUE)
   idx <- sample(nrow(dt), size=round(nrow(dt) * cvp))
@@ -129,43 +142,60 @@ simfun <- function(beta0=2, beta1.mu=1, beta1.var=0.1, beta1.scale=1.5,
   xyidx <- list(x=dt$longitude[idx], y=dt$latitude[idx])
   e10 <- (fit0$beta1hat - beta1)
   e20 <- (fit0$beta2hat - beta2)
-  e30 <- (fit0$beta3hat - beta3)
+  #e30 <- (fit0$beta3hat - beta3)
   cvmse1 <- mean((interp.im(e10, xyidx))^2)
   cvmse2 <- mean((interp.im(e20, xyidx))^2)
-  cvmse3 <- mean((interp.im(e30, xyidx))^2)
+  #cvmse3 <- mean((interp.im(e30, xyidx))^2)
   ep0 <- (dt$y[idx] - interp.im(fit0$yhat, xyidx)) / 
     (dt$y[idx] +  0.5 * (dt$y[idx] == 0))
   cvmpe <- mean(ep0^2, na.rm=TRUE)
-  return(list(beta1=beta1, beta2=beta2, beta3=beta3, 
-              e1=e1, e2=e2, e3=e3, theta=fit$thetahat, 
-              mse1=mse1, mse2=mse2, mse3=mse3, 
-              cvmse1=cvmse1, cvmse2=cvmse2, cvmse3=cvmse3, 
+  return(list(beta1=beta1, beta2=beta2, #beta3=beta3, 
+              e1=e1, e2=e2, #e3=e3, 
+              theta=fit$thetahat, 
+              mse1=mse1, mse2=mse2, #mse3=mse3, 
+              cvmse1=cvmse1, cvmse2=cvmse2, #cvmse3=cvmse3, 
               mpe=mpe, cvmpe=cvmpe))
 }
 # =========================================================
+inla.setOption(inla.timeout=60, safe=TRUE, silent=FALSE)
 
 nsim <- 200
 nn <- c(25, 50, 100, 150, 200, 250)
 vv <- c(0.05, 0.1 , 0.2)
-mse1 <- mse2 <-  mse3 <- mpe <- array(dim=c(length(nn), length(vv), 2))
-dimnames(mse1) <- dimnames(mse2) <- dimnames(mse3) <- dimnames(mpe) <- list("n"=nn, "var"=vv, "type"=c("all", "cv"))
+mse1 <- mse2 <-  #mse3 <- 
+  mpe <- array(dim=c(length(nn), length(vv), 2))
+dimnames(mse1) <- dimnames(mse2) <- #dimnames(mse3) <- 
+  dimnames(mpe) <- list("n"=nn, "var"=vv, "type"=c("all", "cv"))
 for (i in 1:length(nn))
 {
   cat("i: ", i, "\tn[i]: " , nn[i], "\n")
   for (j in 1:length(vv))
   {
     cat("i: ", i, "\tn[i]: " , nn[i], "j: ", j, "\tv[j]: " , vv[j], "\n")
-    simres <- parallel::mclapply(1:nsim, function(k){ 
-      simfun(beta0=2, beta1.mu=1, beta1.var=vv[j], beta1.scale=1.5, 
-             beta2.mu=1, beta2.var=0.1, beta2.scale=1.5, 
-             beta3.mu=1, beta3.var=0.1, beta3.scale=1.5, n=nn[i]) 
-    }, mc.cores=6)
+    simres <- vector("list", length=nsim)
+    for (k in 1:nsim)
+    {
+      simres[[k]] <- simfun(beta0=2, 
+                            beta1pars=c(mu=1, var=vv[j], scale=1.75, nu=1),
+                            beta2pars=c(mu=1, var=0.1, scale=1.75, nu=1),
+                            #beta3pars=c(mu=1, var=0.1, scale=1.5, nu=1),
+                            n=nn[i])
+      
+      progressreport(k, nsim)
+    }
+    #simres <- parallel::mclapply(1:nsim, function(k){ 
+    #  simfun(beta0=2, 
+    #         beta1pars=c(mu=1, var=vv[j], scale=1.5),
+    #         beta2pars=c(mu=1, var=0.1, scale=1.5),
+    #         #beta3pars=c(mu=1, var=0.1, scale=1.5),
+    #         n=nn[i]) 
+    #}, mc.cores=6)
     mse1[i, j, 1] <- mean(unlist(lapply(simres, function(o){ o$mse1 })))
     mse1[i, j, 2] <- mean(unlist(lapply(simres, function(o){ o$cvmse1 })))
     mse2[i, j, 1] <- mean(unlist(lapply(simres, function(o){ o$mse2 })))
     mse2[i, j, 2] <- mean(unlist(lapply(simres, function(o){ o$cvmse2 })))
-    mse3[i, j, 1] <- mean(unlist(lapply(simres, function(o){ o$mse3 })))
-    mse3[i, j, 2] <- mean(unlist(lapply(simres, function(o){ o$cvmse3 })))
+    #mse3[i, j, 1] <- mean(unlist(lapply(simres, function(o){ o$mse3 })))
+    #mse3[i, j, 2] <- mean(unlist(lapply(simres, function(o){ o$cvmse3 })))
     mpe[i, j, 1] <- mean(unlist(lapply(simres, function(o){ o$mpe })))
     mpe[i, j, 2] <- mean(unlist(lapply(simres, function(o){ o$cvmpe })))
   }
