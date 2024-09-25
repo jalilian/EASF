@@ -159,8 +159,8 @@ simfun <- function(beta0=2,
 # =========================================================
 inla.setOption(inla.timeout=60, safe=TRUE, silent=FALSE)
 
-nsim <- 200
-nn <- c(25, 50, 100, 150, 200, 250)
+nsim <- 300
+nn <- c(50, 100, 150, 200, 250, 300)
 vv <- c(0.05, 0.1 , 0.2)
 mse1 <- mse2 <-  #mse3 <- 
   mpe <- array(dim=c(length(nn), length(vv), 2))
@@ -200,6 +200,11 @@ for (i in 1:length(nn))
     mpe[i, j, 2] <- mean(unlist(lapply(simres, function(o){ o$cvmpe })))
   }
 }
+
+saveRDS(mse1, "~/mse1.rds")
+saveRDS(mse2, "~/mse2.rds")
+saveRDS(mpe, "~/mpe.rds")
+
 
 as.data.frame.table(mse1) %>% 
   mutate(n=as.numeric(as.character(n))) %>%
