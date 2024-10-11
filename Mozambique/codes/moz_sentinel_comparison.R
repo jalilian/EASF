@@ -538,3 +538,5 @@ mean(sqrt(cv12s[, 2]), na.rm=TRUE)
 quantile(sqrt(cv12s[, 2]), c(0.025, 0.975), na.rm=TRUE)
 
 
+mean(sqrt(cv21s[, 2]) <= mean(sqrt(cv12s[, 2])))
+mean(sqrt(cv12s[, 2]) <= mean(sqrt(cv21s[, 2])))

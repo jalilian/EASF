@@ -2,43 +2,135 @@
 library("readxl")
 library("tidyverse")
 library("sf")
+# =========================================================
 
+# EASF data
+edata <- list()
+edata[[1]] <- 
+  read_excel("~/Downloads/Ghana/Ghana EASF_HLC data (Jul-Dec23).xlsx",
+             sheet="Sheet 1 - events1",
+             col_types="text")
+edata[[2]] <- 
+  read_excel("~/Downloads/Ghana/Ghana EASF_PSC data (Jul-Dec23).xlsx",
+             sheet="Sheet 1 - events", skip=1,
+             col_types="text") %>%
+  rename("Program stage name"="enrollment")
+edata[[3]] <- 
+  read_excel("~/Downloads/Ghana/HLC_data_EASF_Jan_Jul.xlsx",
+             sheet="Sheet 1 - events_hlc_csv",
+             col_types="text") %>%
+  rename("Program stage name" = "programstagename",
+         "Org unit name" = "orgunitname") %>%
+  select(-attributeOptionCombo)
+edata[[4]] <- 
+  read_excel("~/Downloads/Ghana/CID_data_EASF_Jan_Jul.xlsx",
+             sheet="Sheet 1 - events_cid_csv",
+             col_types="text") %>%
+  select(-attributeOptionCombo)
+
+edata <- bind_rows(edata)
+
+prepfun <- function(dat)
+{
+  dat %>%
+    # convert eventDate to Date type and extract year and month
+    mutate(eventDate = as.Date(eventDate),
+           year=substr(eventDate, 1, 4), 
+           month=month.name[as.numeric(substr(eventDate, 6, 7))]) %>%
+    group_by(event) %>%
+    # extract 'houseID'
+    mutate(houseID=
+             ifelse(`Datat element name` == "HH Number", 
+                    value, 
+                    NA)) %>%
+    mutate(houseID=toupper(houseID),
+           houseID=
+             ifelse(sum(!is.na(houseID)) > 0,
+                    houseID[!is.na(houseID)],
+                    NA)) %>%
+    mutate(houseID=str_remove_all(houseID, " "),
+           houseID=str_replace_all(houseID, "-|=|/", "_"),
+           houseID=str_replace(houseID, "0TET_", "OTET_"))
+}
+
+edata <- prepfun(edata)
+
+# sentinel site data
 sdata <- list()
-sdata[[1]] <- read_excel("~/Downloads/Ghana/Control sites HLC.xlsx",
-                         sheet="Sheet 1 - events 2",
-                         col_types="text") %>%
-  rename("programname" = "Program name",
-         "Org unit name" = "orgunitname",
+sdata[[1]] <- 
+  read_excel("~/Downloads/Ghana/Control sites HLC.xlsx",
+             sheet="Sheet 1 - events 2",
+             col_types="text") %>%
+  rename("Org unit name" = "orgunitname",
          "Program stage name" = "programstagename")
-sdata[[2]] <- read_excel("~/Downloads/Ghana/Control sites CID.xlsx",
-                         sheet="Sheet 1 - events", skip=1,
-                         col_types="text")
+sdata[[2]] <- 
+  read_excel("~/Downloads/Ghana/Control sites CID.xlsx",
+             sheet="Sheet 1 - events", skip=1,
+             col_types="text") %>%
+  rename("Program name" = "programname")
+sdata[[3]] <- 
+  read_excel("~/Downloads/Ghana/Control sites HLC_Jan-Jul.xlsx",
+             sheet="Sheet 1 - events_hlc_csv",
+             col_types="text") %>%
+  rename("Org unit name" = "orgunitname",
+         "Program stage name" = "programstagename")
+sdata[[4]] <- 
+  read_excel("~/Downloads/Ghana/Control sites CID_Jan-Jul.xlsx",
+             sheet="Sheet 1 - events_cid_csv",
+             col_types="text")
 
-sdata[[1]] %>% filter(str_detect(`Datat element name`, ": An. gambiae")) %>%
-  count(`Datat element name`) %>% print(n=500)
-
-sdata[[2]] %>% filter(str_detect(`Datat element name`, "An. gambiae s.l.: Collected")) %>%
-  count(`Datat element name`) %>% print(n=500)
 
 sdata <- bind_rows(sdata)  %>%
+  # convert eventDate to Date type and extract year and month
   mutate(eventDate = as.Date(eventDate),
          year=substr(eventDate, 1, 4), 
-         month=month.name[as.numeric(substr(eventDate, 6, 7))]) %>% 
+         month=month.name[as.numeric(substr(eventDate, 6, 7))]) %>%
+  group_by(event)
+
+# extract 'houseID'
+sdata <- sdata %>%
+  mutate(houseID=ifelse(`Datat element name` == "HH Number", 
+                        value, 
+                        NA)) %>%
+  mutate(houseID=houseID[!is.na(houseID)]) %>%
+  mutate(houseID=str_remove_all(houseID, " "),
+         houseID=str_replace_all(houseID, "-|=", "_"),
+         houseID=str_replace(houseID, "0TET_", "OTET_"))
+
+sdata %>% 
+  count(programname, eventDate, houseID, 
+        longitude, latitude) %>%
+  arrange(eventDate, houseID) %>%
+  select(-n) %>%
+  write_csv(file="~/Desktop/gha_control_sites.csv")
+
+sdata %>% 
+  group_by(event) %>% 
+  count(longitude, latitude) %>%
+  print(n=700)
+
+sdata <- sdata %>% 
   mutate(vv=str_replace_all(value, " ", ""),
-         vv=str_replace_all(vv, "-", "_"),
+         vv=str_replace_all(vv, "-|=", "_"),
          vv=str_replace(vv, "_LC_", "_HLC_"),
          vv=str_replace(vv, "_SC_", "_PSC_"),
          vv=str_replace(vv, "^HL_|^HLC_", "HEL_"),
          vv=str_replace(vv, "0TET_", "OTET_"), 
-         vv=str_replace(vv, "_14$|_0014$", "_014"),
-         vv=str_replace(vv, "_0011", "_011"),
-         vv=case_match(vv, "HEL_PSC_08" ~ "HEL_PSC_008", .default=vv),
+         vv=str_replace(vv, "_00", "_0"),
+         #vv=str_replace(vv, "_14$|_0014$|_014$", "_14"),
+         #vv=str_replace(vv, "_0011", "_011"),
+         vv=case_match(vv, 
+                      # "HEL_PSC_08" ~ "HEL_PSC_008",
+                       "HEC_HLC_02" ~ "HEL_HLC_02", 
+                       "HEL_HC_03" ~ "HEL_HLC_03",
+                       "HEL_HCL_04" ~ "HEL_HLC_04",
+                       "HEL_PSC005" ~ "HEL_PSC_05", .default=vv),
          vv=ifelse(nchar(vv) == 14, substr(vv, 1, 11), vv),
          vv=ifelse(str_detect(vv, "^SW"), 
                    paste(programname, 
                          str_replace(vv, "(?=[:digit:])", "_"), 
                          sep="_"), vv)) %>%
-  group_by(programname, `Org unit name`, month)
+  group_by(programname, `Org unit name`, year, month)
 
 sdata <- sdata %>%
   mutate(hh=ifelse(`Datat element name` == "HH Number", 
@@ -53,6 +145,7 @@ for (i in 1:nrow(sdata))
 
 sdata %>% 
   filter(`Datat element name` == "HH Number") %>% 
+  ungroup() %>%
   count(value, vv) %>% print(n=700)
 
 sdata %>% 
