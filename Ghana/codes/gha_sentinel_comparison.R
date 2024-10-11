@@ -50,10 +50,19 @@ prepfun <- function(dat)
                     NA)) %>%
     mutate(houseID=str_remove_all(houseID, " "),
            houseID=str_replace_all(houseID, "-|=|/", "_"),
-           houseID=str_replace(houseID, "0TET_", "OTET_"))
+           houseID=str_replace(houseID, "0TET_", "OTET_"),
+           houseID=str_replace(houseID, "_LC_|_HC_|_HKC_|_LHC_", "_HLC_"),
+           houseID=str_replace(houseID, "_SC_", "_PSC_"))
 }
 
 edata <- prepfun(edata)
+
+edata %>% 
+  count(`Program name`, eventDate, houseID, 
+        longitude, latitude, geometry) %>%
+  arrange(eventDate, houseID) %>%
+  select(-n) %>%
+  write_csv(file="~/Desktop/gha_easf_sites.csv")
 
 # sentinel site data
 sdata <- list()
@@ -80,26 +89,14 @@ sdata[[4]] <-
              col_types="text")
 
 
-sdata <- bind_rows(sdata)  %>%
-  # convert eventDate to Date type and extract year and month
-  mutate(eventDate = as.Date(eventDate),
-         year=substr(eventDate, 1, 4), 
-         month=month.name[as.numeric(substr(eventDate, 6, 7))]) %>%
-  group_by(event)
+sdata <- bind_rows(sdata) 
 
-# extract 'houseID'
-sdata <- sdata %>%
-  mutate(houseID=ifelse(`Datat element name` == "HH Number", 
-                        value, 
-                        NA)) %>%
-  mutate(houseID=houseID[!is.na(houseID)]) %>%
-  mutate(houseID=str_remove_all(houseID, " "),
-         houseID=str_replace_all(houseID, "-|=", "_"),
-         houseID=str_replace(houseID, "0TET_", "OTET_"))
+sdata <- prepfun(sdata)
+
 
 sdata %>% 
-  count(programname, eventDate, houseID, 
-        longitude, latitude) %>%
+  count(`Program name`, eventDate, houseID, 
+        longitude, latitude, geometry) %>%
   arrange(eventDate, houseID) %>%
   select(-n) %>%
   write_csv(file="~/Desktop/gha_control_sites.csv")
