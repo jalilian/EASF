@@ -8,6 +8,7 @@ library("INLA")
 
 if (FALSE)
 {
+  cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_GHA_0.kmz")
   source(
     "https://github.com/jalilian/CEASE/raw/refs/heads/main/Ethiopia/codes/get_Copernicus_climate_data.R"
     )
