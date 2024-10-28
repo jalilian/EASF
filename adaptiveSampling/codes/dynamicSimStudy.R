@@ -8,18 +8,46 @@ library("INLA")
 
 if (FALSE)
 {
-  cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_GHA_0.kmz")
   source(
     "https://github.com/jalilian/CEASE/raw/refs/heads/main/Ethiopia/codes/get_Copernicus_climate_data.R"
     )
   key <- "******************************"
+  cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_GHA_0.kmz")
   envars_gha <- get_cds(key, year=2024, month=7, day=1, what=cmap)
   saveRDS(envars_gha, "~/Documents/GitHub/EASF/adaptiveSampling/envars_gha.rds")
-
-  # North, West, South, East
-  area <- c(38, -20, -38, 51)
-  a1 <- get_cds(key, year=2024, month=7, day=1, what=area)
+  cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_MOZ_0.kmz")
+  envars_gha <- get_cds(key, year=2024, month=7, day=1, what=cmap)
+  saveRDS(envars_gha, "~/Documents/GitHub/EASF/adaptiveSampling/envars_moz.rds")
+  
 }
+
+# environmental variables 
+envars <- readRDS(
+  url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
+  ) %>%# rescale the selected covariates to [-1, 1] interval
+mutate(skin_temperature=
+         scales::rescale(skin_temperature, to=c(-1, 1)), 
+       total_precipitation=
+         scales::rescale(total_precipitation, to=c(-1, 1)), 
+       leaf_area_index_low_vegetation=
+         scales::rescale(leaf_area_index_low_vegetation, to=c(-1, 1)), 
+       volumetric_soil_water_layer_1=
+         scales::rescale(volumetric_soil_water_layer_1, to=c(-1, 1)))
+
+z1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
+                       y=st_coordinates(envars)[, "Y"],
+                       z=envars$skin_temperature))
+z2 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
+                       y=st_coordinates(envars)[, "Y"],
+                       z=envars$leaf_area_index_low_vegetation))
+z3 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
+                       y=st_coordinates(envars)[, "Y"],
+                       z=envars$volumetric_soil_water_layer_1))
+
+par(mfrow=c(1, 3), mar=c(1, 0, 1, 0))
+plot(z1, main="temprature", ribside="bottom", ribsep=0.02)
+plot(z2, main="vegetation", ribside="bottom", ribsep=0.02)
+plot(z3, main="surface wetness", ribside="bottom", ribsep=0.02)
 
 # read environmental variables for Mozambique 
 dat <- readRDS(
