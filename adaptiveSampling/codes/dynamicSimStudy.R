@@ -18,21 +18,25 @@ if (FALSE)
   cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_MOZ_0.kmz")
   envars_gha <- get_cds(key, year=2024, month=7, day=1, what=cmap)
   saveRDS(envars_gha, "~/Documents/GitHub/EASF/adaptiveSampling/envars_moz.rds")
-  
 }
 
+# =========================================================
 # environmental variables 
+
 envars <- readRDS(
+  #url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
   url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
-  ) %>%# rescale the selected covariates to [-1, 1] interval
-mutate(skin_temperature=
-         scales::rescale(skin_temperature, to=c(-1, 1)), 
-       total_precipitation=
-         scales::rescale(total_precipitation, to=c(-1, 1)), 
-       leaf_area_index_low_vegetation=
-         scales::rescale(leaf_area_index_low_vegetation, to=c(-1, 1)), 
-       volumetric_soil_water_layer_1=
-         scales::rescale(volumetric_soil_water_layer_1, to=c(-1, 1)))
+) %>%
+  # rescale the selected covariates to [-1, 1] interval
+  mutate(skin_temperature=
+           scales::rescale(skin_temperature, to=c(-1, 1)), 
+         total_precipitation=
+           scales::rescale(total_precipitation, to=c(-1, 1)), 
+         leaf_area_index_low_vegetation=
+           scales::rescale(leaf_area_index_low_vegetation, to=c(-1, 1)), 
+         volumetric_soil_water_layer_1=
+           scales::rescale(volumetric_soil_water_layer_1, to=c(-1, 1)))
+
 
 z1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
                        y=st_coordinates(envars)[, "Y"],
@@ -49,33 +53,8 @@ plot(z1, main="temprature", ribside="bottom", ribsep=0.02)
 plot(z2, main="vegetation", ribside="bottom", ribsep=0.02)
 plot(z3, main="surface wetness", ribside="bottom", ribsep=0.02)
 
-# read environmental variables for Mozambique 
-dat <- readRDS(
-  url("https://github.com/jalilian/EASF/raw/main/Mozambique/cds_land_data.rds")
-  ) %>% 
-  # fix a time slot: June 2023 
-  filter(year == 2023, month == "June") %>%
-  # rescale the selected covariates to [-1, 1] interval
-  mutate(skt_mean=scales::rescale(skt_mean, to=c(-1, 1)), 
-         tp_mean=scales::rescale(tp_mean, to=c(-1, 1)), 
-         lai_lv_mean=scales::rescale(lai_lv_mean, to=c(-1, 1)), 
-         swvl1_mean=scales::rescale(swvl1_mean, to=c(-1, 1)))
-# convert selected environmental variables to spatstat pixel images
-z1 <- as.im(list(x=unique(dat$longitude), y=unique(dat$latitude), 
-                z=matrix(dat$skt_mean, ncol=length(unique(dat$latitude)), 
-                         byrow=TRUE)))
-z2 <- as.im(list(x=unique(dat$longitude), y=unique(dat$latitude), 
-                 z=matrix(dat$lai_lv_mean, ncol=length(unique(dat$latitude)), 
-                          byrow=TRUE)))
-z3 <- as.im(list(x=unique(dat$longitude), y=unique(dat$latitude), 
-                 z=matrix(dat$swvl1_mean, ncol=length(unique(dat$latitude)), 
-                          byrow=TRUE)))
-
-par(mfrow=c(1, 3), mar=c(1, 0, 1, 0))
-plot(z1, main="temprature", ribside="bottom", ribsep=0.02)
-plot(z2, main="vegetation", ribside="bottom", ribsep=0.02)
-plot(z3, main="surface wetness", ribside="bottom", ribsep=0.02)
 # =========================================================
+# sampling locations
 
 samplocs <- function(n, grid_percent=0.6, domain=as.owin(z1), dimyx=dim(z1))
 {
@@ -203,7 +182,8 @@ simfun <- function(beta0=2,
 inla.setOption(inla.timeout=60, safe=TRUE, silent=FALSE)
 
 nsim <- 300
-nn <- c(50, 100, 150, 200, 250, 300)
+#nn <- c(50, 100, 150, 200, 250, 300)
+nn <- c(25, 50, 75, 100, 150, 200)
 vv <- c(0.05, 0.1 , 0.2)
 mse1 <- mse2 <-  #mse3 <- 
   mpe <- array(dim=c(length(nn), length(vv), 2))
@@ -252,14 +232,14 @@ saveRDS(mpe, "~/mpe.rds")
 as.data.frame.table(mse1) %>% 
   mutate(n=as.numeric(as.character(n))) %>%
   rename(MSE=Freq, "sample size"=n) %>%
-  ggplot(aes(x=`sample size`, y=MSE)) +
+  ggplot(aes(x=`sample size`, y=log(MSE))) +
   geom_line(aes(col=var, linetype=type)) +
   theme_light()
 
 as.data.frame.table(mse2) %>% 
   mutate(n=as.numeric(as.character(n))) %>%
   rename(MSE=Freq, "sample size"=n) %>%
-  ggplot(aes(x=`sample size`, y=MSE)) +
+  ggplot(aes(x=`sample size`, y=log(MSE))) +
   geom_line(aes(col=var, linetype=type)) +
   theme_light()
 
@@ -273,7 +253,7 @@ as.data.frame.table(mse3) %>%
 as.data.frame.table(mpe) %>% 
   mutate(n=as.numeric(as.character(n))) %>%
   rename(MPE=Freq, "sample size"=n) %>%
-  ggplot(aes(x=`sample size`, y=MPE)) +
+  ggplot(aes(x=`sample size`, y=log(MPE))) +
   geom_line(aes(col=var, linetype=type)) +
   theme_light()
 
