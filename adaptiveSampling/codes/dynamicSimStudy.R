@@ -1,4 +1,5 @@
 
+library("terra")
 library("tidyverse")
 library("sf")
 library("spatstat")
@@ -8,21 +9,69 @@ library("INLA")
 
 if (FALSE)
 {
+  #  WorldClim version 2.1 climate data for 1970-2000
+  # 10 minutes
+  urls <- c(
+    # average temperature (°C)
+    "https://geodata.ucdavis.edu/climate/worldclim/2_1/base/wc2.1_10m_tavg.zip",
+    # precipitation (mm) 
+    "https://geodata.ucdavis.edu/climate/worldclim/2_1/base/wc2.1_10m_prec.zip",
+    # wind speed (m/s)
+    "https://geodata.ucdavis.edu/climate/worldclim/2_1/base/wc2.1_10m_wind.zip"
+  )
+  
+  for (ur in urls)
+  {
+    download.file(
+      url=ur,
+      destfile=paste0(tempdir(), "/aa.zip")
+    )
+    unzip(paste0(tempdir(), "/aa.zip"), exdir=paste0(tempdir(), "/aa/"))
+  }
+  
+  # average temperature (°C)
+  z1 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_tavg_07.tif"))
+  # precipitation (mm) 
+  z2 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_prec_07.tif"))
+  # wind speed (m/s)
+  z3 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_wind_07.tif"))
+  
+  # country iso code
+  country <- "moz"
+  
+  # map of the country
+  cmap <- read_sf(
+    paste0("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_",
+           toupper(country), "_0.kmz")
+    )
+
+  # corp WorldClim data to the country
+  z1 <- terra::crop(z1, cmap)
+  z2 <- terra::crop(z2, cmap)
+  z3 <- terra::crop(z3, cmap)
+  
+  # get Copernicus data
   source(
     "https://github.com/jalilian/CEASE/raw/refs/heads/main/Ethiopia/codes/get_Copernicus_climate_data.R"
-    )
+  )
   key <- "******************************"
-  cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_GHA_0.kmz")
-  envars_gha <- get_cds(key, year=2024, month=7, day=1, what=cmap)
-  saveRDS(envars_gha, "~/Documents/GitHub/EASF/adaptiveSampling/envars_gha.rds")
-  cmap <- read_sf("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_MOZ_0.kmz")
-  envars_gha <- get_cds(key, year=2024, month=7, day=1, what=cmap)
-  saveRDS(envars_gha, "~/Documents/GitHub/EASF/adaptiveSampling/envars_moz.rds")
+  
+  envars <- get_cds(key, year=2024, month=7, day=1, what=cmap)
+
+  envars <- envars %>%
+    mutate(tavg = terra::extract(z1, st_coordinates(envars)),
+           perc = terra::extract(z2, st_coordinates(envars)),
+           wind = terra::extract(z3, st_coordinates(envars)))
+  
+  saveRDS(envars, 
+          paste0("~/Documents/GitHub/EASF/adaptiveSampling/envars_",
+                 country, ".rds"))
 }
 
 # =========================================================
 # environmental variables 
 
+plot(u)
 envars <- readRDS(
   #url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
   url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
