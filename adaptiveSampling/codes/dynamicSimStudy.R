@@ -1,5 +1,4 @@
 
-library("terra")
 library("tidyverse")
 library("sf")
 library("spatstat")
@@ -29,6 +28,7 @@ if (FALSE)
     unzip(paste0(tempdir(), "/aa.zip"), exdir=paste0(tempdir(), "/aa/"))
   }
   
+  library("terra")
   # average temperature (°C)
   z1 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_tavg_07.tif"))
   # precipitation (mm) 
@@ -71,7 +71,6 @@ if (FALSE)
 # =========================================================
 # environmental variables 
 
-plot(u)
 envars <- readRDS(
   #url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
   url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
