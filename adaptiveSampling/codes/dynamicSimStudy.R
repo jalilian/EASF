@@ -74,32 +74,46 @@ if (FALSE)
 envars <- readRDS(
   #url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
   url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
-) %>%
+  ) %>%
+  # compute wind speed and Temp in centigrade
+  mutate(wind_speed=sqrt(`10m_u_component_of_wind`^2 + 
+                           `10m_v_component_of_wind`^2),
+         skin_temperature=skin_temperature - 273.15) %>%
   # rescale the selected covariates to [-1, 1] interval
-  mutate(skin_temperature=
-           scales::rescale(skin_temperature, to=c(-1, 1)), 
-         total_precipitation=
-           scales::rescale(total_precipitation, to=c(-1, 1)), 
-         leaf_area_index_low_vegetation=
-           scales::rescale(leaf_area_index_low_vegetation, to=c(-1, 1)), 
-         volumetric_soil_water_layer_1=
-           scales::rescale(volumetric_soil_water_layer_1, to=c(-1, 1)))
+  mutate(skin_temperature=base::scale(skin_temperature), 
+         tavg=base::scale(tavg),
+         total_precipitation=base::scale(total_precipitation),
+         perc=base::scale(perc),
+         wind_speed=base::scale(wind_speed), 
+         wind=base::scale(wind))
 
+x1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
+                       y=st_coordinates(envars)[, "Y"],
+                       z=envars$skin_temperature))
+x2 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
+                       y=st_coordinates(envars)[, "Y"],
+                       z=envars$total_precipitation))
+x3 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
+                       y=st_coordinates(envars)[, "Y"],
+                       z=envars$wind_speed))
 
 z1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
                        y=st_coordinates(envars)[, "Y"],
-                       z=envars$skin_temperature))
+                       z=envars$tavg))
 z2 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
                        y=st_coordinates(envars)[, "Y"],
-                       z=envars$leaf_area_index_low_vegetation))
+                       z=envars$perc))
 z3 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
                        y=st_coordinates(envars)[, "Y"],
-                       z=envars$volumetric_soil_water_layer_1))
+                       z=envars$wind))
 
-par(mfrow=c(1, 3), mar=c(1, 0, 1, 0))
+par(mfrow=c(2, 3), mar=c(1, 0, 1, 0))
 plot(z1, main="temprature", ribside="bottom", ribsep=0.02)
-plot(z2, main="vegetation", ribside="bottom", ribsep=0.02)
-plot(z3, main="surface wetness", ribside="bottom", ribsep=0.02)
+plot(z2, main="precipitation", ribside="bottom", ribsep=0.02)
+plot(z3, main="wind", ribside="bottom", ribsep=0.02)
+plot(x1, main="temprature", ribside="bottom", ribsep=0.02)
+plot(x2, main="precipitation", ribside="bottom", ribsep=0.02)
+plot(x3, main="wind", ribside="bottom", ribsep=0.02)
 
 # =========================================================
 # sampling locations
@@ -125,7 +139,7 @@ samplocs <- function(n, grid_percent=0.6, domain=as.owin(z1), dimyx=dim(z1))
   )
 }
 
-fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1), verbose=FALSE)
+fitfun <- function(dt, z1, z2, z3, x1, x2, x3, domain=as.owin(z1), verbose=FALSE)
 {
   D <- as.polygonal(domain)$bdry[[1]]
   mh <- fm_mesh_2d_inla(
@@ -139,12 +153,16 @@ fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1), verbose=FALSE)
     mutate(z1=interp.im(z1, list(x=longitude, y=latitude)), 
            z2=interp.im(z2, list(x=longitude, y=latitude)),
            z3=interp.im(z3, list(x=longitude, y=latitude)),
+           x1=interp.im(x1, list(x=longitude, y=latitude)), 
+           x2=interp.im(x2, list(x=longitude, y=latitude)),
+           x3=interp.im(x3, list(x=longitude, y=latitude)),
            s1idx=1:mh$n, s2idx=1:mh$n, s3idx=1:mh$n) %>%
-    left_join(dt, by=c("longitude", "latitude", "z1", "z2", "z3"))
+    left_join(dt, by=c("longitude", "latitude", 
+                       "z1", "z2", "z3", "x1", "x2", "x3"))
   spde <- inla.spde2.matern(mesh=mh, alpha=2, constr=TRUE)
   fit <- inla(y ~ 1 + z1 + z2 + #z3 + 
-                f(s1idx, z1, model=spde) + 
-                f(s2idx, z2, model=spde),# + 
+                f(s1idx, x1, model=spde) + 
+                f(s2idx, x2, model=spde),# + 
                 #f(s3idx, z3, model=spde), 
               data=dt, family="poisson",
               control.predictor=list(link=1),
@@ -156,21 +174,19 @@ fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1), verbose=FALSE)
   #b3m <- inla.mesh.project(mj, fit$summary.random$s3idx$mean)
   ym <- inla.mesh.project(mj, fit$summary.fitted.values$mean)
   W <- as.owin(z1)
-  beta1hat <- as.im(list(x=mj$x, y=mj$y, z=b1m), W=W) +
-    fit$summary.fixed$mean[1 + 1]
-  beta2hat <- as.im(list(x=mj$x, y=mj$y, z=b2m), W=W) +
-    fit$summary.fixed$mean[2 + 1]
-  #beta3hat <- as.im(list(x=mj$x, y=mj$y, z=b3m), W=W) +
-  #  fit$summary.fixed$mean[3 + 1]
+  beta1hat <- as.im(list(x=mj$x, y=mj$y, z=b1m), W=W) 
+  beta2hat <- as.im(list(x=mj$x, y=mj$y, z=b2m), W=W) 
+  #beta3hat <- as.im(list(x=mj$x, y=mj$y, z=b3m), W=W)
   yhat <- as.im(list(x=mj$x, y=mj$y, z=ym), W=W)
   return(list(beta1hat=beta1hat, 
               beta2hat=beta2hat, 
               #beta3hat=beta3hat, 
+              betahat=fit$summary.fixed$mean,
               thetahat=fit$summary.hyperpar$mean,
               y=dt$y[!is.na(dt$y)], yhat=yhat))
 }
 
-simfun <- function(beta0=2, 
+simfun <- function(beta0=3, 
                    beta1pars=c(mu=1, var=0.1, scale=0.8, nu=1),
                    beta2pars=c(mu=1, var=0.1, scale=1, nu=1),
                    #beta3pars=c(mu=1, var=0.1, scale=1.5, nu=1),
@@ -178,7 +194,7 @@ simfun <- function(beta0=2,
                    n=200, cvp=0.2)
 {
   beta1 <- rGRFmatern(W=owin(xrange=z1$xrange, yrange=z1$yrange), 
-                      mu=beta1pars["mu"], 
+                      mu=0, 
                       var=beta1pars["var"], 
                       scale=beta1pars["scale"], 
                       nu=beta1pars["nu"], dimyx=z1$dim)
@@ -191,7 +207,7 @@ simfun <- function(beta0=2,
   }
   beta1 <- Smooth(beta1, normalise=TRUE, vcov=beta1pars["var"] * vcov)
   beta2 <- rGRFmatern(W=owin(xrange=z2$xrange, yrange=z2$yrange), 
-                      mu=beta2pars["mu"], 
+                      mu=0, 
                       var=beta2pars["var"], 
                       scale=beta2pars["scale"], 
                       nu=beta2pars["nu"], dimyx=z2$dim)
@@ -212,17 +228,22 @@ simfun <- function(beta0=2,
                       mu=0, var=xipars["var"], 
                       scale=xipars["scale"], 
                       nu=xipars["nu"], dimyx=z3$dim)
-  eta <- beta0 + beta1 * z1 + beta2 * z2 + #beta3 * z3 +
+  eta <- beta0 + 
+    beta1pars["mu"] * z1 + beta1 * x1 + 
+    beta2pars["mu"] * z2 + beta2 * x2 + #beta3 * z3 +
     xi
   S <- samplocs(n=n, grid_percent=0.6)
   dt <- data.frame(longitude=S$x, latitude=S$y, 
                    z1=interp.im(z1, S), 
                    z2=interp.im(z2, S), 
                    z3=interp.im(z3, S), 
+                   x1=interp.im(x1, S), 
+                   x2=interp.im(x2, S), 
+                   x3=interp.im(x3, S), 
                    eta=interp.im(eta, S))
   dt <- na.omit(dt) %>% 
     mutate(y=rpois(n=length(eta), lambda=exp(eta)))
-  fit <- fitfun(dt, z1, z2, z3)
+  fit <- fitfun(dt, z1, z2, z3, x1, x2, x3)
   e1 <- (fit$beta1hat - beta1)
   e2 <- (fit$beta2hat - beta2)
   #e3 <- (fit$beta3hat - beta3)
