@@ -59,9 +59,9 @@ if (FALSE)
   envars <- get_cds(key, year=2024, month=7, day=1, what=cmap)
 
   envars <- envars %>%
-    mutate(tavg = terra::extract(z1, st_coordinates(envars)),
-           perc = terra::extract(z2, st_coordinates(envars)),
-           wind = terra::extract(z3, st_coordinates(envars)))
+    mutate(tavg = terra::extract(z1, st_coordinates(envars))[[1]],
+           perc = terra::extract(z2, st_coordinates(envars))[[1]],
+           wind = terra::extract(z3, st_coordinates(envars))[[1]])
   
   saveRDS(envars, 
           paste0("~/Documents/GitHub/EASF/adaptiveSampling/envars_",
@@ -125,12 +125,15 @@ samplocs <- function(n, grid_percent=0.6, domain=as.owin(z1), dimyx=dim(z1))
   )
 }
 
-fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1))
+fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1), verbose=FALSE)
 {
   D <- as.polygonal(domain)$bdry[[1]]
-  mh <- fm_mesh_2d_inla(loc=cbind(dt$longitude, dt$latitude),
-                        loc.domain=cbind(D$x, D$y),
-                        max.edge=0.8, offset=NULL)
+  mh <- fm_mesh_2d_inla(
+    loc=cbind(dt$longitude, dt$latitude),
+    boundary=cbind(D$x, D$y), 
+    max.edge = c(0.5, 1.2),
+    cutoff= 0.1, 
+  )
   dt <- data.frame(longitude=mh$loc[, 1], 
                    latitude=mh$loc[, 2]) %>%
     mutate(z1=interp.im(z1, list(x=longitude, y=latitude)), 
@@ -145,7 +148,7 @@ fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1))
                 #f(s3idx, z3, model=spde), 
               data=dt, family="poisson",
               control.predictor=list(link=1),
-              verbose=TRUE)
+              verbose=verbose)
              #silent=TRUE, num.threads=1)
   mj <- inla.mesh.projector(mh,  dims=rev(z1$dim))
   b1m <- inla.mesh.project(mj, fit$summary.random$s1idx$mean)
@@ -168,9 +171,10 @@ fitfun <- function(dt, z1, z2, z3, domain=as.owin(z1))
 }
 
 simfun <- function(beta0=2, 
-                   beta1pars=c(mu=1, var=0.1, scale=1.75, nu=1),
-                   beta2pars=c(mu=1, var=0.1, scale=1.75, nu=1),
+                   beta1pars=c(mu=1, var=0.1, scale=0.8, nu=1),
+                   beta2pars=c(mu=1, var=0.1, scale=1, nu=1),
                    #beta3pars=c(mu=1, var=0.1, scale=1.5, nu=1),
+                   xipars=c(var=0.1, scale=0.1, nu=1),
                    n=200, cvp=0.2)
 {
   beta1 <- rGRFmatern(W=owin(xrange=z1$xrange, yrange=z1$yrange), 
@@ -178,17 +182,38 @@ simfun <- function(beta0=2,
                       var=beta1pars["var"], 
                       scale=beta1pars["scale"], 
                       nu=beta1pars["nu"], dimyx=z1$dim)
+  r1xy <- diff(z1$xrange) / diff(z1$yrange)
+  if (r1xy < 1)
+  {
+    vcov <- c(r1xy, 1)
+  } else{
+    vcov <- c(1, r1xy)
+  }
+  beta1 <- Smooth(beta1, normalise=TRUE, vcov=beta1pars["var"] * vcov)
   beta2 <- rGRFmatern(W=owin(xrange=z2$xrange, yrange=z2$yrange), 
                       mu=beta2pars["mu"], 
                       var=beta2pars["var"], 
                       scale=beta2pars["scale"], 
                       nu=beta2pars["nu"], dimyx=z2$dim)
+  r2xy <- diff(z2$xrange) / diff(z2$yrange)
+  if (r2xy < 1)
+  {
+    vcov <- c(r2xy, 1)
+  } else{
+    vcov <- c(1, r2xy)
+  }
+  beta2 <- Smooth(beta2, normalise=TRUE, vcov=beta2pars["var"] * vcov)
   #beta3 <- rGRFmatern(W=owin(xrange=z3$xrange, yrange=z3$yrange), 
   #                    mu=beta3pars["mu"], 
   #                    var=beta3pars["var"], 
   #                    scale=beta3pars["scale"], 
   #                    nu=beta3pars["nu"], dimyx=z3$dim)
-  eta <- beta0 + beta1 * z1 + beta2 * z2 #+ beta3 * z3
+  xi <- rGRFmatern(W=owin(xrange=z3$xrange, yrange=z3$yrange), 
+                      mu=0, var=xipars["var"], 
+                      scale=xipars["scale"], 
+                      nu=xipars["nu"], dimyx=z3$dim)
+  eta <- beta0 + beta1 * z1 + beta2 * z2 + #beta3 * z3 +
+    xi
   S <- samplocs(n=n, grid_percent=0.6)
   dt <- data.frame(longitude=S$x, latitude=S$y, 
                    z1=interp.im(z1, S), 
@@ -229,9 +254,9 @@ simfun <- function(beta0=2,
 # =========================================================
 inla.setOption(inla.timeout=60, safe=TRUE, silent=FALSE)
 
-nsim <- 300
+nsim <- 500
 #nn <- c(50, 100, 150, 200, 250, 300)
-nn <- c(25, 50, 75, 100, 150, 200)
+nn <- c(50, 75, 100, 150, 200, 250)
 vv <- c(0.05, 0.1 , 0.2)
 mse1 <- mse2 <-  #mse3 <- 
   mpe <- array(dim=c(length(nn), length(vv), 2))
@@ -239,10 +264,9 @@ dimnames(mse1) <- dimnames(mse2) <- #dimnames(mse3) <-
   dimnames(mpe) <- list("n"=nn, "var"=vv, "type"=c("all", "cv"))
 for (i in 1:length(nn))
 {
-  cat("i: ", i, "\tn[i]: " , nn[i], "\n")
   for (j in 1:length(vv))
   {
-    cat("i: ", i, "\tn[i]: " , nn[i], "j: ", j, "\tv[j]: " , vv[j], "\n")
+    cat("i: ", i, "j: ", j, "\tn =" , nn[i], "\tv =" , vv[j], "\n")
     simres <- vector("list", length=nsim)
     for (k in 1:nsim)
     {
@@ -250,6 +274,7 @@ for (i in 1:length(nn))
                             beta1pars=c(mu=1, var=vv[j], scale=1.75, nu=1),
                             beta2pars=c(mu=1, var=0.1, scale=1.75, nu=1),
                             #beta3pars=c(mu=1, var=0.1, scale=1.5, nu=1),
+                            xipars=c(var=0.1, scale=0.15, nu=1),
                             n=nn[i])
       
       progressreport(k, nsim)
