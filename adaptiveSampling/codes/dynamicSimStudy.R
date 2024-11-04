@@ -73,8 +73,6 @@ if (FALSE)
       mutate(month=as.numeric(month))
   }
   
-  
-  
   envars <- envars %>%
     mutate(year=year(date), month=month(date)) %>%
     mutate(longitude=st_coordinates(envars)[, "X"], 
