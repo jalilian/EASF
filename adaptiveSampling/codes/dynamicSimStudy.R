@@ -84,12 +84,13 @@ envars <- readRDS(
                            `10m_v_component_of_wind`^2),
          skin_temperature=skin_temperature - 273.15) %>%
   # rescale the selected covariates to [-1, 1] interval
-  mutate(skin_temperature=base::scale(skin_temperature), 
-         tavg=base::scale(tavg),
-         total_precipitation=base::scale(total_precipitation),
-         perc=base::scale(perc),
-         wind_speed=base::scale(wind_speed), 
-         wind=base::scale(wind))
+  mutate(skin_temperature=base::scale(skin_temperature, center=FALSE), 
+         tavg=base::scale(tavg, center=FALSE),
+         total_precipitation=base::scale(total_precipitation, center=FALSE),
+         perc=base::scale(perc, center=FALSE),
+         wind_speed=base::scale(wind_speed, center=FALSE), 
+         wind=base::scale(wind, center=FALSE)) %>%
+  mutate(year=year(date), month=month(date))
 
 x1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
                        y=st_coordinates(envars)[, "Y"],
