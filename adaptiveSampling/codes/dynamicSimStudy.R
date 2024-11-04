@@ -30,12 +30,15 @@ if (FALSE)
   
   library("terra")
   # average temperature (°C)
-  z1 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_tavg_07.tif"))
+  z1 <- terra::rast(list.files(path=paste0(tempdir(), "/aa/"), 
+                                pattern="tavg", full.names=TRUE))     
   # precipitation (mm) 
-  z2 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_prec_07.tif"))
+  z2 <- terra::rast(list.files(path=paste0(tempdir(), "/aa/"), 
+                               pattern="prec", full.names=TRUE))   
   # wind speed (m/s)
-  z3 <- terra::rast(paste0(tempdir(), "/aa/", "wc2.1_10m_wind_07.tif"))
-  
+  z3 <- terra::rast(list.files(path=paste0(tempdir(), "/aa/"), 
+                               pattern="wind", full.names=TRUE))   
+
   # country iso code
   country <- "moz"
   
@@ -44,11 +47,6 @@ if (FALSE)
     paste0("https://geodata.ucdavis.edu/gadm/gadm4.1/kmz/gadm41_",
            toupper(country), "_0.kmz")
     )
-
-  # corp WorldClim data to the country
-  z1 <- terra::crop(z1, cmap)
-  z2 <- terra::crop(z2, cmap)
-  z3 <- terra::crop(z3, cmap)
   
   # get Copernicus data
   source(
@@ -56,7 +54,13 @@ if (FALSE)
   )
   key <- "******************************"
   
-  envars <- get_cds(key, year=2024, month=7, day=1, what=cmap)
+  envars <- bind_rows(
+    get_cds(key, year=2020, month=sprintf("%02d", 1:12), day=1, what=cmap),
+    get_cds(key, year=2021, month=sprintf("%02d", 1:12), day=1, what=cmap),
+    get_cds(key, year=2022, month=sprintf("%02d", 1:12), day=1, what=cmap),
+    get_cds(key, year=2023, month=sprintf("%02d", 1:12), day=1, what=cmap),
+    get_cds(key, year=2024, month=sprintf("%02d", 1:12), day=1, what=cmap),
+  )
 
   envars <- envars %>%
     mutate(tavg = terra::extract(z1, st_coordinates(envars))[[1]],
@@ -73,7 +77,7 @@ if (FALSE)
 
 envars <- readRDS(
   #url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
-  url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
+  url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
   ) %>%
   # compute wind speed and Temp in centigrade
   mutate(wind_speed=sqrt(`10m_u_component_of_wind`^2 + 
@@ -166,7 +170,7 @@ fitfun <- function(dt, z1, z2, z3, x1, x2, x3, domain=as.owin(z1), verbose=FALSE
                 #f(s3idx, z3, model=spde), 
               data=dt, family="poisson",
               control.predictor=list(link=1),
-              verbose=verbose)
+              verbose=verbose, num.threads=2)
              #silent=TRUE, num.threads=1)
   mj <- inla.mesh.projector(mh,  dims=rev(z1$dim))
   b1m <- inla.mesh.project(mj, fit$summary.random$s1idx$mean)
@@ -181,7 +185,7 @@ fitfun <- function(dt, z1, z2, z3, x1, x2, x3, domain=as.owin(z1), verbose=FALSE
   return(list(beta1hat=beta1hat, 
               beta2hat=beta2hat, 
               #beta3hat=beta3hat, 
-              betahat=fit$summary.fixed$mean,
+              gammahat=fit$summary.fixed$mean,
               thetahat=fit$summary.hyperpar$mean,
               y=dt$y[!is.na(dt$y)], yhat=yhat))
 }
@@ -254,7 +258,7 @@ simfun <- function(beta0=3,
   ep <- (dt$y - interp.im(fit$yhat, xy)) / (dt$y + 0.5 * (dt$y == 0))
   mpe <- mean(ep^2, na.rm=TRUE)
   idx <- sample(nrow(dt), size=round(nrow(dt) * cvp))
-  fit0 <- fitfun(dt[-idx, ], z1, z2, z3)
+  fit0 <- fitfun(dt[-idx, ], z1, z2, z3, x1, x2, x3)
   xyidx <- list(x=dt$longitude[idx], y=dt$latitude[idx])
   e10 <- (fit0$beta1hat - beta1)
   e20 <- (fit0$beta2hat - beta2)
