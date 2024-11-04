@@ -55,17 +55,39 @@ if (FALSE)
   key <- "******************************"
   
   envars <- bind_rows(
-    get_cds(key, year=2020, month=sprintf("%02d", 1:12), day=1, what=cmap),
-    get_cds(key, year=2021, month=sprintf("%02d", 1:12), day=1, what=cmap),
     get_cds(key, year=2022, month=sprintf("%02d", 1:12), day=1, what=cmap),
     get_cds(key, year=2023, month=sprintf("%02d", 1:12), day=1, what=cmap),
     get_cds(key, year=2024, month=sprintf("%02d", 1:12), day=1, what=cmap),
   )
 
+  xy <- unique(st_coordinates(envars))
+  xy <- data.frame(longitude=xy[, "X"], latitude=xy[, "Y"])
+  tnfun <- function(z, xy, name)
+  {
+    zv <- terra::extract(z, as.matrix(xy))
+    colnames(zv) <- 1:12
+    zv %>%
+      mutate(longitude=xy$longitude, latitude=xy$latitude) %>%
+      pivot_longer(-c(longitude, latitude), 
+                   names_to="month", values_to=name) %>%
+      mutate(month=as.numeric(month))
+  }
+  
+  
+  
   envars <- envars %>%
-    mutate(tavg = terra::extract(z1, st_coordinates(envars))[[1]],
-           perc = terra::extract(z2, st_coordinates(envars))[[1]],
-           wind = terra::extract(z3, st_coordinates(envars))[[1]])
+    mutate(year=year(date), month=month(date)) %>%
+    mutate(longitude=st_coordinates(envars)[, "X"], 
+           latitude=st_coordinates(envars)[, "Y"]) %>%
+    relocate("year", "month", "longitude", "latitude", .after=date) %>%
+    left_join(
+      tnfun(z1, xy, "tavg") %>%
+        left_join(tnfun(z3, xy, "wind"), 
+                  by=join_by(longitude, latitude, month))  %>%
+        left_join(tnfun(z2, xy, "perc"), 
+                  by=join_by(longitude, latitude, month)),
+              by=join_by(longitude, latitude, month)
+      )
   
   saveRDS(envars, 
           paste0("~/Documents/GitHub/EASF/adaptiveSampling/envars_",
@@ -89,41 +111,32 @@ envars <- readRDS(
          total_precipitation=base::scale(total_precipitation, center=FALSE),
          perc=base::scale(perc, center=FALSE),
          wind_speed=base::scale(wind_speed, center=FALSE), 
-         wind=base::scale(wind, center=FALSE)) %>%
-  mutate(year=year(date), month=month(date))
+         wind=base::scale(wind, center=FALSE))
 
-x1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
-                       y=st_coordinates(envars)[, "Y"],
-                       z=envars$skin_temperature))
-x2 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
-                       y=st_coordinates(envars)[, "Y"],
-                       z=envars$total_precipitation))
-x3 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
-                       y=st_coordinates(envars)[, "Y"],
-                       z=envars$wind_speed))
+longlat <- as.data.frame(st_coordinates(envars)) %>%
+  rename(longitude=X, latitude=Y) %>%
+  distinct() %>%
+  mutate(sid=1:nrow(.))
 
-z1 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
-                       y=st_coordinates(envars)[, "Y"],
-                       z=envars$tavg))
-z2 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
-                       y=st_coordinates(envars)[, "Y"],
-                       z=envars$perc))
-z3 <- as.im(data.frame(x=st_coordinates(envars)[, "X"], 
-                       y=st_coordinates(envars)[, "Y"],
-                       z=envars$wind))
+envars <- envars %>% 
+  st_join(st_as_sf(longlat, 
+                     coords=c("longitude", "latitude"), 
+                     crs=st_crs(envars)))
 
-par(mfrow=c(2, 3), mar=c(1, 0, 1, 0))
-plot(z1, main="temprature", ribside="bottom", ribsep=0.02)
-plot(z2, main="precipitation", ribside="bottom", ribsep=0.02)
-plot(z3, main="wind", ribside="bottom", ribsep=0.02)
-plot(x1, main="temprature", ribside="bottom", ribsep=0.02)
-plot(x2, main="precipitation", ribside="bottom", ribsep=0.02)
-plot(x3, main="wind", ribside="bottom", ribsep=0.02)
+envars <- envars %>%
+  mutate(tid=as.numeric(factor(date)))
+
+W <- as.im(data.frame(x=longlat$longitude, 
+                      y=longlat$latitude,
+                      z=TRUE))
+
+par(mar=c(1, 0, 1, 0))
+plot(W, main="")
 
 # =========================================================
 # sampling locations
 
-samplocs <- function(n, grid_percent=0.6, domain=as.owin(z1), dimyx=dim(z1))
+samplocs <- function(n, grid_percent=0.6, domain=as.owin(W), dimyx=dim(W))
 {
   # number of points to place on a grid
   n_grid <- n * grid_percent
@@ -144,7 +157,14 @@ samplocs <- function(n, grid_percent=0.6, domain=as.owin(z1), dimyx=dim(z1))
   )
 }
 
-fitfun <- function(dt, z1, z2, z3, x1, x2, x3, domain=as.owin(z1), verbose=FALSE)
+sampdata <- function(envars, S)
+{
+  sidx <- nncross(X=S, Y=ppp(longlat$longitude, longlat$latitude, 
+                            window=as.owin(W)), what="which")
+  envars %>% 
+    filter(sid %in% sidx)
+}
+fitfun <- function(dt, z1, z2, z3, x1, x2, x3, domain=as.owin(W), verbose=FALSE)
 {
   D <- as.polygonal(domain)$bdry[[1]]
   mh <- fm_mesh_2d_inla(
@@ -198,19 +218,20 @@ simfun <- function(beta0=3,
                    xipars=c(var=0.1, scale=0.1, nu=1),
                    n=200, cvp=0.2)
 {
-  beta1 <- rGRFmatern(W=owin(xrange=z1$xrange, yrange=z1$yrange), 
+  beta1s <- rGRFmatern(W=owin(xrange=W$xrange, yrange=W$yrange), 
                       mu=0, 
                       var=beta1pars["var"], 
                       scale=beta1pars["scale"], 
-                      nu=beta1pars["nu"], dimyx=z1$dim)
-  r1xy <- diff(z1$xrange) / diff(z1$yrange)
+                      nu=beta1pars["nu"], dimyx=dim(W))
+  r1xy <- diff(W$xrange) / diff(W$yrange)
   if (r1xy < 1)
   {
     vcov <- c(r1xy, 1)
   } else{
     vcov <- c(1, r1xy)
   }
-  beta1 <- Smooth(beta1, normalise=TRUE, vcov=beta1pars["var"] * vcov)
+  beta1s <- Smooth(beta1s, normalise=TRUE, vcov=beta1pars["var"] * vcov)
+  beta1t <- cumsum(rnorm(nt, mean=0, sd=sig1))
   beta2 <- rGRFmatern(W=owin(xrange=z2$xrange, yrange=z2$yrange), 
                       mu=0, 
                       var=beta2pars["var"], 
@@ -234,7 +255,7 @@ simfun <- function(beta0=3,
                       scale=xipars["scale"], 
                       nu=xipars["nu"], dimyx=z3$dim)
   eta <- beta0 + 
-    beta1pars["mu"] * z1 + beta1 * x1 + 
+    beta1pars["mu"] * z1 + (beta1s + beta1t)* x1 + 
     beta2pars["mu"] * z2 + beta2 * x2 + #beta3 * z3 +
     xi
   S <- samplocs(n=n, grid_percent=0.6)
