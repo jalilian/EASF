@@ -96,8 +96,8 @@ if (FALSE)
 # environmental variables 
 
 envars <- readRDS(
+  url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_gha.rds")
   #url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
-  url("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/envars_moz.rds")
   ) %>%
   na.omit() %>%
   # compute wind speed and Temp in centigrade
@@ -136,10 +136,11 @@ plot(W, main="")
 # =========================================================
 # sampling locations
 
-samplocs <- function(n, grid_percent=0.6, domain=as.owin(W), dimyx=dim(W))
+samplocs <- function(n, grid_percent=0.6, domain=as.owin(W), dimyx=dim(W),
+                     plotit=FALSE)
 {
   # number of points to place on a grid
-  n_grid <- n * grid_percent
+  n_grid <- n * grid_percent * area(boundingbox(domain)) / area(domain)
   # aspect ratio of the domain (height/width)
   apr <- dimyx[1] / dimyx[2]
   #  number of grid cells in the x and y directions
@@ -149,12 +150,23 @@ samplocs <- function(n, grid_percent=0.6, domain=as.owin(W), dimyx=dim(W))
   Q <- gridcentres(domain, nx=round(nx), ny=round(ny))
   # points falling inside the domain's boundary
   ok <- inside.owin(Q$x, Q$y, domain)
-  superimpose(
-    # grid points that are inside the domain 
-    ppp(Q$x[ok], Q$y[ok], window=domain), 
-    # randomly generated points to make up the rest of locations
-    rpoint(n=n - sum(ok), win=domain)
-  )
+  # grid points that are inside the domain 
+  S1 <- ppp(Q$x[ok], Q$y[ok], window=domain)
+  # randomly generated points to make up the rest of locations
+  S2 <- rpoint(n=n - sum(ok), win=domain)
+  if (plotit)
+  {
+    as.polygonal(domain)$bdry[[1]] %>% 
+      as.data.frame() %>% 
+      ggplot(aes(x=x, y=y)) + 
+      geom_polygon(fill="grey75") +
+      geom_point(data=as.data.frame(S1), shape=3, col="blue") +
+      geom_point(data=as.data.frame(S2), shape=4, col="red") +
+      labs(x="longitude", y="latitude") +
+      coord_fixed() +
+      theme_light()
+  }
+  superimpose(S1, S2)
 }
 
 sampdata <- function(dt, S)
@@ -205,7 +217,7 @@ fitfun <- function(dt, domain=as.owin(W), verbose=FALSE)
               y=dt1$y, yhat=yhat))
 }
 
-simfun <- function(beta0=1, 
+simfun <- function(beta0=1.5, 
                    beta1pars=c(mu=0.5, var=0.025, scale=0.8, nu=1, sig=0.05),
                    beta2pars=c(mu=0.5, var=0.025, scale=1, nu=1, sig=0.05),
                    xipars=c(var=0.05, scale=0.1, nu=1),
