@@ -2,118 +2,18 @@
 library("readxl")
 library("tidyverse")
 library("sf")
-# =========================================================
 
-# EASF data
-edata <- list()
-edata[[1]] <- 
-  read_excel("~/Downloads/Ghana/Ghana EASF_HLC data (Jul-Dec23).xlsx",
-             sheet="Sheet 1 - events1",
-             col_types="text")
-edata[[2]] <- 
-  read_excel("~/Downloads/Ghana/Ghana EASF_PSC data (Jul-Dec23).xlsx",
-             sheet="Sheet 1 - events", skip=1,
-             col_types="text") %>%
-  rename("Program stage name"="enrollment")
-edata[[3]] <- 
-  read_excel("~/Downloads/Ghana/HLC_data_EASF_Jan_Jul.xlsx",
-             sheet="Sheet 1 - events_hlc_csv",
-             col_types="text") %>%
-  rename("Program stage name" = "programstagename",
-         "Org unit name" = "orgunitname") %>%
-  select(-attributeOptionCombo)
-edata[[4]] <- 
-  read_excel("~/Downloads/Ghana/CID_data_EASF_Jan_Jul.xlsx",
-             sheet="Sheet 1 - events_cid_csv",
-             col_types="text") %>%
-  select(-attributeOptionCombo)
+# ===============================================
 
-edata <- bind_rows(edata)
-
-prepfun <- function(dat)
-{
-  dat %>%
-    # convert eventDate to Date type and extract year and month
-    mutate(eventDate = as.Date(eventDate),
-           year=substr(eventDate, 1, 4), 
-           month=month.name[as.numeric(substr(eventDate, 6, 7))]) %>%
-    group_by(event) %>%
-    # extract 'houseID'
-    mutate(houseID=
-             ifelse(`Datat element name` == "HH Number", 
-                    value, 
-                    NA)) %>%
-    mutate(houseID=toupper(houseID),
-           houseID=
-             ifelse(sum(!is.na(houseID)) > 0,
-                    houseID[!is.na(houseID)],
-                    NA)) %>%
-    mutate(houseID2=paste(
-      toupper(substr(`Org unit name`, 1, 3)),
-      `Program stage name`,
-      str_pad(as.numeric(str_extract(houseID, "\\d+")), 
-              width=2, pad="0"), 
-      sep="_")) %>%
-    mutate(houseID=str_remove_all(houseID, " "),
-           houseID=str_replace_all(houseID, "-|=|/", "_"),
-           houseID=str_replace(houseID, "0KU_", "OKU_"),
-           houseID=str_replace(houseID, "0TET_", "OTET_"),
-           houseID=str_replace(houseID, "D0B_", "DOB_"),
-           houseID=str_replace(houseID, "EH_HLC_", "EHI_HLC_"),
-           houseID=str_replace(houseID, "_LC_|_HC_|_HKC_|_LHC_", "_HLC_"),
-           houseID=str_replace(houseID, "_SC_", "_PSC_"))
-}
-
-edata <- prepfun(edata)
-
-edata %>% 
-  count(`Program name`, eventDate, houseID, 
-        longitude, latitude, geometry) %>%
-  arrange(eventDate, houseID) %>%
-  select(-n) %>%
-  write_csv(file="~/Desktop/gha_easf_sites.csv")
-
-# sentinel site data
-sdata <- list()
-sdata[[1]] <- 
-  read_excel("~/Downloads/Ghana/Control sites HLC.xlsx",
-             sheet="Sheet 1 - events 2",
-             col_types="text") %>%
-  rename("Org unit name" = "orgunitname",
-         "Program stage name" = "programstagename")
-sdata[[2]] <- 
-  read_excel("~/Downloads/Ghana/Control sites CID.xlsx",
-             sheet="Sheet 1 - events", skip=1,
-             col_types="text") %>%
-  rename("Program name" = "programname")
-sdata[[3]] <- 
-  read_excel("~/Downloads/Ghana/Control sites HLC_Jan-Jul.xlsx",
-             sheet="Sheet 1 - events_hlc_csv",
-             col_types="text") %>%
-  rename("Org unit name" = "orgunitname",
-         "Program stage name" = "programstagename")
-sdata[[4]] <- 
-  read_excel("~/Downloads/Ghana/Control sites CID_Jan-Jul.xlsx",
-             sheet="Sheet 1 - events_cid_csv",
-             col_types="text")
-
-
-sdata <- bind_rows(sdata) 
-
-sdata <- prepfun(sdata)
-
-
-sdata %>% 
-  count(`Program name`, eventDate, houseID, 
-        longitude, latitude, geometry) %>%
-  arrange(eventDate, houseID) %>%
-  select(-n) %>%
-  write_csv(file="~/Desktop/gha_control_sites.csv")
 
 sdata %>% 
   group_by(event) %>% 
   count(longitude, latitude) %>%
   print(n=700)
+
+
+
+
 
 
 
@@ -164,41 +64,32 @@ sdata %>%
 
 sdata <- sdata %>% 
   group_by(programname, `Org unit name`, `house ID`, month)
-# ===============================================
 
-convert_coords <- function(lon, lat) 
-{
-  lon <- gsub("\\s+", " ", lon)
-  lat <- gsub("\\s+", " ", lat)
-  # Handle decimal degrees
-  if (grepl("^[-+]?[0-9.]+$", lon) && grepl("^[-+]?[0-9.]+$", lat))
-  {
-    return(c(as.numeric(lon), as.numeric(lat)))
-  }
-  conv2dec <- function(x)
-  {
-    x_sp <- strsplit(gsub("[^0-9°.'\"]", "", x), "°|'|\"")
-    x_sp <- as.numeric(unlist(x_sp))
-    60^seq(0, length(x_sp) - 1)
-    sum(x_sp / 60^seq(0, length(x_sp) - 1))
-  }
-  if (grepl("°", lon))
-  {
-    
-  }
-  
-  lon_direction <- ifelse(grepl("W", lon, ignore.case=TRUE), -1, 1)
-  lat_direction <- ifelse(grepl("S", lat, ignore.case=TRUE), -1, 1)
-  
-  conv2dec(lon) * lon_direction
-  conv2dec(lat) * lat_direction
-  return(c(lon_dec, lat_dec))
-}
 
-gps <- read_excel(
-  "~/Downloads/Ghana/EASF GPS COORDINATES.xlsx",
-  sheet="HLC") %>%
-  mutate(`house ID`=str_replace_all(`house ID`, "\\s", ""))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 sent_coords <- as_tibble(matrix(c(
   "HEL_HLC_01", 0.51125, 7.0709, 
