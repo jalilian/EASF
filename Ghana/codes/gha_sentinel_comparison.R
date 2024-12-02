@@ -48,9 +48,18 @@ prepfun <- function(dat)
              ifelse(sum(!is.na(houseID)) > 0,
                     houseID[!is.na(houseID)],
                     NA)) %>%
+    mutate(houseID2=paste(
+      toupper(substr(`Org unit name`, 1, 3)),
+      `Program stage name`,
+      str_pad(as.numeric(str_extract(houseID, "\\d+")), 
+              width=2, pad="0"), 
+      sep="_")) %>%
     mutate(houseID=str_remove_all(houseID, " "),
            houseID=str_replace_all(houseID, "-|=|/", "_"),
+           houseID=str_replace(houseID, "0KU_", "OKU_"),
            houseID=str_replace(houseID, "0TET_", "OTET_"),
+           houseID=str_replace(houseID, "D0B_", "DOB_"),
+           houseID=str_replace(houseID, "EH_HLC_", "EHI_HLC_"),
            houseID=str_replace(houseID, "_LC_|_HC_|_HKC_|_LHC_", "_HLC_"),
            houseID=str_replace(houseID, "_SC_", "_PSC_"))
 }
@@ -106,6 +115,10 @@ sdata %>%
   count(longitude, latitude) %>%
   print(n=700)
 
+
+
+
+
 sdata <- sdata %>% 
   mutate(vv=str_replace_all(value, " ", ""),
          vv=str_replace_all(vv, "-|=", "_"),
@@ -152,6 +165,40 @@ sdata %>%
 sdata <- sdata %>% 
   group_by(programname, `Org unit name`, `house ID`, month)
 # ===============================================
+
+convert_coords <- function(lon, lat) 
+{
+  lon <- gsub("\\s+", " ", lon)
+  lat <- gsub("\\s+", " ", lat)
+  # Handle decimal degrees
+  if (grepl("^[-+]?[0-9.]+$", lon) && grepl("^[-+]?[0-9.]+$", lat))
+  {
+    return(c(as.numeric(lon), as.numeric(lat)))
+  }
+  conv2dec <- function(x)
+  {
+    x_sp <- strsplit(gsub("[^0-9°.'\"]", "", x), "°|'|\"")
+    x_sp <- as.numeric(unlist(x_sp))
+    60^seq(0, length(x_sp) - 1)
+    sum(x_sp / 60^seq(0, length(x_sp) - 1))
+  }
+  if (grepl("°", lon))
+  {
+    
+  }
+  
+  lon_direction <- ifelse(grepl("W", lon, ignore.case=TRUE), -1, 1)
+  lat_direction <- ifelse(grepl("S", lat, ignore.case=TRUE), -1, 1)
+  
+  conv2dec(lon) * lon_direction
+  conv2dec(lat) * lat_direction
+  return(c(lon_dec, lat_dec))
+}
+
+gps <- read_excel(
+  "~/Downloads/Ghana/EASF GPS COORDINATES.xlsx",
+  sheet="HLC") %>%
+  mutate(`house ID`=str_replace_all(`house ID`, "\\s", ""))
 
 sent_coords <- as_tibble(matrix(c(
   "HEL_HLC_01", 0.51125, 7.0709, 
