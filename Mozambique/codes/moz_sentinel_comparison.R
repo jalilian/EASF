@@ -540,3 +540,41 @@ quantile(sqrt(cv12s[, 2]), c(0.025, 0.975), na.rm=TRUE)
 
 mean(sqrt(cv21s[, 2]) <= mean(sqrt(cv12s[, 2])))
 mean(sqrt(cv12s[, 2]) <= mean(sqrt(cv21s[, 2])))
+
+
+# =========================================================
+################################### NEW #############################
+# =========================================================
+
+source("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/codes/convert_coords.R")
+
+ndata <- read_excel(
+  "~/Downloads/Mozambique/Niassa province_EASF_Routine_data_cuamba_mandimba_AZM_09122024 _Year 1 & Year 2.xlsx",
+  sheet="Cuamba-Mandimba-EASF-Routine")
+
+ndata <- ndata %>%
+  mutate(latitude=case_match(latitude,
+                             "1-14.351183" ~ "-14.351182",  # NMA2IHC001
+                             "-14.34.66583" ~ "-14.3466583", # NMA8IHC001
+                             .default=latitude),
+         date=as.Date(date, format="%d/%m/%Y"),
+         date=if_else(is.na(date), as.Date("2024-07-11"), date))
+
+aa <- convert_coords(ndata$`GPS-Garmin E`, 
+                     paste("-", ndata$`GPS-Garmin S`))
+
+ndata %>%
+  group_by(programme) %>%
+  count(date) %>% print(n=500)
+ndata %>% count(province, district)
+ndata %>% count(`house id`) %>% print(n=500)
+
+library("mapview")
+ndata %>% 
+  st_as_sf(., coords=c("longitude", "latitude"),
+           crs=4326) %>%
+  mapview()
+
+ndata %>%
+  select(`house id`, longitude, latitude, date, programme) %>%
+  write_csv("~/Desktop/niassa_all.csv")

@@ -12,10 +12,16 @@ convert_coords <- function(lon, lat)
   {
     # replace multiple spaces with a single space
     x1 <- gsub("\\s+", " ", x)
+    # replace the ring above character ˚ (unicode U+02DA) with
+    #       the degree symbol character ° (unicode U+00B0)
+    x1 <- gsub("\u02DA", "\u00B0", x1)
+    # replace the combined horn or comma above character (unicode U+031B) with
+    #       the single straight quote or apostrophe character ' (unicode U+0027)
+    x1 <- gsub("\u031B", "'", x1)
     # only keep signs, numeric, degree/minute/second symbols and space
-    x1 <- gsub("[^-+0-9.°'\" ]", "", x1)
+    x1 <- gsub("[^-+0-9.°˚'\" ]", "", x1)
     # split into components based on degree/minute/second/space characters
-    x_sp <- strsplit(x1, "°|'|\"| ")
+    x_sp <- strsplit(x1, "°|˚|'|\"| ")
     # remove empty components and convert remaining components to numeric
     x_sp <- lapply(x_sp, function(o) as.numeric(o[o != ""]))
 

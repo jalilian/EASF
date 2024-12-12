@@ -8,80 +8,27 @@ library("sf")
 
 source("https://github.com/jalilian/EASF/raw/refs/heads/main/adaptiveSampling/codes/convert_coords.R")
 
-egps <- bind_rows(
-  read_excel(
-    "~/Downloads/Ghana/EASF GPS COORDINATES.xlsx",
-    sheet="HLC") %>%
-    rename("Latitude" = `Latitude `) %>%
-    select("house ID", "Longitude", "Latitude") %>%
-    mutate(method="HLS"),
-  read_excel(
-    "~/Downloads/Ghana/EASF GPS COORDINATES.xlsx",
-    sheet="PSC") %>%
-    rename("house ID" = "Hosehold Number") %>%
-    select("house ID", "Longitude", "Latitude") %>%
-    mutate(method="PSC")
-) %>%
-  na.omit() %>%
-  mutate(`house ID`=str_replace_all(`house ID`, "\\s", ""),
-         `house ID`=str_replace_all(`house ID`, "-", "_"),
-         `house ID`=str_replace_all(`house ID`, "SUA", "SUI"),
-         `house ID`=str_replace_all(`house ID`, "OUT", "OTU")) %>%
-  mutate(Longitude=case_match(Longitude, 
-                              "-4.2976E-2" ~ "-0.42976", # OBO-HLC-03 & OBO-HLC-04
-                              "001°100.120 W" ~ "001°00.120 W", # EHI-HLC-04
-                              "001°03.700." ~ "001°03.700", # ATI-PSC-06
-                              "001°03.800." ~ "001°03.800", # ATI-PSC-11
-                              "-258269" ~ "-2.58269", # SUI-PSC-11
-                              "-258244" ~ "-2.58244", # SUI-PSC-12 & SUI-PSC-14
-                              "-258231" ~ "-2.58231", # SUI-PSC-13
-                              "-258365" ~ "-2.58365", # SUI-PSC-16
-                              "-3.476500" ~ "-3.0476500", # ANT-PSC-08
-                              .default=Longitude),
-         Longitude=case_when(
-           str_detect(`house ID`, "SUI_HLC") ~ 
-             paste0("-", Longitude), # for SUA-HLC
-           .default=Longitude),
-         Latitude=case_match(Latitude,
-                             "N 05.42.300'" ~ "N 05 42.300'", # DOB-PSC-20
-                             "6.797399" ~ "6.0797399", # KAR-PSC-02
-                             "610330" ~ "6.10330", # SUI-PSC-11
-                             "610333" ~ "6.10333", # SUI-PSC-12	
-                             "610363" ~ "6.10363", # SUI-PSC-13
-                             "610366" ~ "6.10366", # SUI-PSC-14
-                             "610442" ~ "6.10442", # SUI-PSC-16
-                             "5.2882910000000001" ~ "5.88291", # OBO-PSC-04
-                             "5.2883988999999998" ~ "5.883989", # OBO-PSC-05
-                             "5.5377070000000002" ~ "5.7377070000000002", # OBO-HLC-04
-                             .default=Latitude)) %>%
-  mutate(program="EASF")
 
-aa <- convert_coords(egps$Longitude, egps$Latitude)
-egps <- egps %>%
-  mutate(LONGITUDE=aa[, 1], LATITUDE=aa[, 2]) %>%
-  select(-c(Longitude, Latitude))
+gps <- read_excel(
+  "~/Downloads/Ghana/GHA_GPS EB review 12_6_24.xlsx",
+  sheet="gha_gps"
+  ) 
 
+aa <- convert_coords(gps$LONGITUDE, gps$LATITUDE)
 
-sgps <- bind_rows(
-  read_excel(
-    "~/Downloads/Ghana/ROUTINE (CONTROL) SITES .xlsx",
-    sheet="HLC") %>%
-    rename("house ID" = "HOUSEHOLD NUMBER") %>%
-    select("house ID", "LONGITUDE", "LATITUDE") %>%
-    mutate(method="HLS"),
-  read_excel(
-    "~/Downloads/Ghana/ROUTINE (CONTROL) SITES .xlsx",
-    sheet="PSC") %>%
-    rename("house ID" = "ROOM NUMBER") %>%
-    select("house ID", "LONGITUDE", "LATITUDE") %>%
-    mutate(method="PSC")
-) %>%
-  mutate(`house ID`=str_replace_all(`house ID`, "\\s", ""),
-         `house ID`=str_replace_all(`house ID`, "-", "_")) %>%
-  mutate(program="Routine")
+gps <- gps %>%
+  mutate(LONGITUDE=aa[, 1],
+         LATITUDE=aa[, 2]) %>% 
+  mutate(method=case_match(method,
+                           "HLS" ~ "HLC",
+                           .default=method)) %>%
+  distinct()
 
-gps <- bind_rows(egps, sgps)
 write_csv(gps, file="~/Downloads/Ghana/gha_gps.csv")
+
+egps <- gps %>% filter(program == "EASF")
+sgps <- gps %>% filter(program == "Routine")
+
 
 st_as_sf(gps, coords=c( "LONGITUDE", "LATITUDE"),
          crs=4326) %>%
@@ -96,8 +43,8 @@ mp <- st_as_sf(gps, coords=c( "LONGITUDE", "LATITUDE"),
   mutate(met=paste(program, method, sep=":")) %>%
   mapview(., zcol="met", label="house ID")
 mapshot2(mp, url="~/Downloads/Ghana/map.html")
-# =========================================================
 
+# =========================================================
 # EASF data
 edata <- list()
 edata[[1]] <- 
@@ -151,7 +98,21 @@ prepfun <- function(dat)
                               sub("^(([^_]*_){2}[^_]*)_.*", 
                                   "\\1", houseID))), 
               width=2, pad="0"), 
-      sep="_"))
+      sep="_")) %>%
+    # Add 'An. gambiae' variable with conditions
+    mutate(
+      `An. gambiae` = case_when(
+        `Program name` == "CID" & 
+          `Datat element name` %in% 
+          c("Total Collected: Anopheles Female", 
+            "Total Collected: Anopheles Male",
+            "An. gambiae s.l.: Collected") ~ value,
+        `Program name` == "CID" & 
+          `Datat element name` %in%
+          c("An. gambiae s.l. caught") ~ value,
+        .default=NA
+      )
+    )
 }
 
 edata <- prepfun(edata)
@@ -166,6 +127,14 @@ edata <- edata %>%
 
 names(table(edata$houseID2[!(edata$houseID2 %in% egps$`house ID`)]))
 egps$`house ID`[!(egps$`house ID` %in% edata$houseID2)]
+
+
+edata <- edata %>% 
+  rename(`house ID`=houseID2) %>%
+  left_join(
+    egps %>% select(`house ID`, LONGITUDE, LATITUDE),
+    by=join_by(`house ID`)
+  )
 
 edata %>% 
   count(`Program name`, eventDate, houseID, 
@@ -218,3 +187,65 @@ sdata %>%
 
 names(table(sdata$houseID2[!(sdata$houseID2 %in% sgps$`house ID`)]))
 sgps$`house ID`[!(sgps$`house ID` %in% sdata$houseID2)]
+
+# =========================================================
+# combine all data
+
+adata <- bind_rows(
+  edata %>%
+    mutate(`An. gambiae`=as.numeric(replace_na(`An. gambiae`, "0"))) %>%
+    group_by(event, eventDate, `Program name`, `Org unit name`, houseID2) %>%
+    summarise(`An. gambiae`=max(`An. gambiae`)) %>%
+    mutate(program="EASF"),
+  sdata %>%
+    mutate(`An. gambiae`=as.numeric(replace_na(`An. gambiae`, "0"))) %>%
+    group_by(event, eventDate, `Program name`, `Org unit name`, houseID2) %>%
+    summarise(`An. gambiae`=max(`An. gambiae`)) %>%
+    mutate(program="Routine")
+  )  %>%
+  rename(method=`Program name`,
+         `house ID`=houseID2) %>%
+  ungroup() %>%
+  mutate(method=case_match(method,
+                           "CID" ~ "PSC",
+                           .default=method)) %>%
+  left_join(gps,
+            by=join_by(`house ID`, method, program)) %>%
+  na.omit()
+
+table(sub("_.*", "", gps$`house ID`))
+table(sub("_.*", "", adata$`house ID`))
+
+# =========================================================
+# molecular analysis of EASF mosquito samples 
+# from July 2023 – July 2024
+mdata <- read_excel(
+  #"~/Downloads/Ghana/EASF Molecular Data July 2023 - July 2024.xlsx",
+  "~/Downloads/Ghana/EASF Molecular Data July 2023 - July 2024_updated.xlsx",
+  sheet="All collections"
+) %>%
+  slice(-1) %>%
+  mutate(`FIELD ID`=gsub("-|/", "_", `FIELD ID`)) %>%
+  mutate(`house ID`=paste(toupper(substr(COMMUNITY, 1, 3)),
+                          `TYPE OF COLLECTION`, 
+                          str_pad(as.numeric(gsub("[^0-9]", "", `FIELD ID`)), 
+                                  width=2, pad=0),
+                          sep="_"),
+         `house ID`=str_replace_all(`house ID`, "TOG", "TOR")) %>%
+  relocate(`house ID`, .before=`FIELD ID`)
+
+mdata %>% count(`FIELD ID`, `house ID`) %>% print(n=800)
+
+mdata %>% 
+  filter(str_detect(`house ID`, "NA")) %>%
+  count(`FIELD ID`, `house ID`) %>% print(n=800)
+
+mdata %>% 
+  count(COMMUNITY, `TYPE OF COLLECTION`, `FIELD ID`) %>%
+  print(n=800)
+mdata %>% count(COMMUNITY, sub("_.*", "", `FIELD ID`)) %>% print(n=500)
+
+mdata %>%
+  mutate(`house ID`=gsub("-|/", "_", `FIELD ID`)) %>%
+  pull(`house ID`) %>% sub("_.*", "", .) %>% table(.)
+
