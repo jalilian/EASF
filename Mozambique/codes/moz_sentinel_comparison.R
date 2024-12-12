@@ -560,8 +560,11 @@ ndata <- ndata %>%
          date=as.Date(date, format="%d/%m/%Y"),
          date=if_else(is.na(date), as.Date("2024-07-11"), date))
 
-aa <- convert_coords(ndata$`GPS-Garmin E`, 
-                     paste("-", ndata$`GPS-Garmin S`))
+aa <- convert_coords(ndata$`GPS-Garmin E`, ndata$`GPS-Garmin S`)
+
+ndata %>%
+  mutate(long=aa[, 1], lat=-aa[, 2]) %>%
+  count(longitude, latitude, long, lat)
 
 ndata %>%
   group_by(programme) %>%
