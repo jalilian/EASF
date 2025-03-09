@@ -103,6 +103,11 @@ tt <- adata %>% group_by(`trap type`, programme, `house id`, date3) %>%
   summarise(An=sum(str_detect(species, "An. ")),
             .groups="drop") 
 
+tt <- tt %>%
+  mutate(`trap type`=case_match(`trap type`,
+                                "Flit" ~ "PSC", 
+                                .default = `trap type`))
+
 tt %>% count(programme, `trap type`) %>%
   rename(effort=n) %>%
   left_join(

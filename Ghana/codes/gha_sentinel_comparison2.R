@@ -323,6 +323,23 @@ adata <- readRDS("adata.rds")
 # =========================================================
 # field data analysis
 
+tt <- adata %>% 
+  mutate(region=case_when(LONGITUDE > 0 ~ "A",
+                          LONGITUDE > -1 ~ "B",
+                          LONGITUDE < -2 ~ "C")) 
+tt %>%
+  count(region, method, program) %>%
+  left_join(tt %>% 
+              group_by(region, method, program) %>% 
+              summarise(total=sum(`An. gambiae`))) %>% 
+  mutate(mean=total / n) %>%
+  ggplot(aes(x=mean, y=method, fill=program)) +
+  geom_bar(stat="identity", position="dodge") +
+  labs(x="Average number of collected mosquitoes",
+       y="Collection method")+
+  facet_wrap(~region) +
+  theme_light()
+
 adata %>% 
   count(method, program) %>%
   left_join(adata %>% 
@@ -348,6 +365,45 @@ t.test(adata %>%
        adata %>% 
          filter(method == "PSC", program == "Routine") %>%
          pull(`An. gambiae`))
+
+
+###
+
+t.test(tt %>% filter(region == "A") %>%
+         filter(method == "HLC", program == "EASF") %>%
+         pull(`An. gambiae`),
+       tt %>% filter(region == "A") %>%
+         filter(method == "HLC", program == "Routine") %>%
+         pull(`An. gambiae`))
+
+t.test(tt %>% filter(region == "A") %>%
+         filter(method == "PSC", program == "EASF") %>%
+         pull(`An. gambiae`),
+       tt %>% filter(region == "A") %>%
+         filter(method == "PSC", program == "Routine") %>%
+         pull(`An. gambiae`))
+
+t.test(tt %>% filter(region == "B") %>%
+         filter(method == "HLC", program == "EASF") %>%
+         pull(`An. gambiae`),
+       tt %>% filter(region == "B") %>%
+         filter(method == "HLC", program == "Routine") %>%
+         pull(`An. gambiae`))
+
+t.test(tt %>% filter(region == "B") %>%
+         filter(method == "PSC", program == "EASF") %>%
+         pull(`An. gambiae`),
+       tt %>% filter(region == "B") %>%
+         filter(method == "PSC", program == "Routine") %>%
+         pull(`An. gambiae`))
+
+t.test(tt %>% filter(region == "C") %>%
+         filter(method == "HLC", program == "EASF") %>%
+         pull(`An. gambiae`),
+       tt %>% filter(region == "C") %>%
+         filter(method == "HLC", program == "Routine") %>%
+         pull(`An. gambiae`))
+
 
 
 library("INLA")
